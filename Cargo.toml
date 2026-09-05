@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "src-tauri",
+    "crates/spellcore",
+    "crates/spellcheck-cli",
+]
+resolver = "2"

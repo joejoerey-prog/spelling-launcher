@@ -1,0 +1,11 @@
+[package]
+name = "spellcheck-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Antigravity"]
+description = "CLI artifact for Raycast integration backed by spellcore"
+
+[dependencies]
+spellcore = { path = "../spellcore" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

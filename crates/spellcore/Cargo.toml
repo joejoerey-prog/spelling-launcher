@@ -1,0 +1,15 @@
+[package]
+name = "spellcore"
+version = "0.1.0"
+edition = "2021"
+authors = ["Antigravity"]
+description = "Native macOS text checking and deterministic rules engine for Spelling Launcher"
+
+[dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSString", "NSRange", "NSArray", "NSDictionary", "NSTextCheckingResult"] }
+objc2-app-kit = { version = "0.3", features = ["NSSpellChecker", "NSApplication", "NSResponder"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex = "1"
+thiserror = "1"
