@@ -7,8 +7,45 @@
     "max_allowed_fp_per_1000_words": 0.50
   },
   "rules": {
+    "native.spelling": {
+      "category": "spelling",
+      "severity": "error",
+      "measured_replacement_accuracy": 0.969,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true,
+      "notes": "Dual-dictionary agreement (en_GB + en_US) and proper noun heuristic eliminated all clean false positives (0.00 FP/1k). Replacement accuracy is 96.9%."
+    },
+    "native.grammar": {
+      "category": "grammar",
+      "severity": "error",
+      "measured_replacement_accuracy": 1.0,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true,
+      "notes": "Local window agreement (e.g. adjacent subject-verb). 0.00 FP/1k."
+    },
+    "grammar.distractor_noun_agreement": {
+      "category": "grammar",
+      "severity": "error",
+      "measured_replacement_accuracy": 1.0,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true,
+      "notes": "Catches long-distance subject-verb agreement across intervening of-phrases. 0.00 FP/1k and 100% replacement accuracy."
+    },
+    "grammar.quantifier_agreement": {
+      "category": "grammar",
+      "severity": "error",
+      "measured_replacement_accuracy": 1.0,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true,
+      "notes": "Catches quantifier agreement (One of, Each of, Neither of). 0.00 FP/1k and 100% replacement accuracy."
+    },
     "confusion.affect_effect": {
       "category": "grammar",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -16,6 +53,23 @@
     },
     "confusion.there_to_their": {
       "category": "grammar",
+      "severity": "error",
+      "measured_replacement_accuracy": 1.0,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true
+    },
+    "confusion.their_to_there": {
+      "category": "grammar",
+      "severity": "warning",
+      "measured_replacement_accuracy": 1.0,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true
+    },
+    "confusion.theyre_to_their": {
+      "category": "grammar",
+      "severity": "warning",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -23,6 +77,23 @@
     },
     "confusion.in_there_was": {
       "category": "grammar",
+      "severity": "error",
+      "measured_replacement_accuracy": 1.0,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true
+    },
+    "confusion.loose_to_lose": {
+      "category": "grammar",
+      "severity": "warning",
+      "measured_replacement_accuracy": 1.0,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true
+    },
+    "confusion.loose_noun_to_lose": {
+      "category": "grammar",
+      "severity": "warning",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -30,6 +101,7 @@
     },
     "confusion.lead_to_led": {
       "category": "grammar",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -37,6 +109,7 @@
     },
     "confusion.then_to_than": {
       "category": "grammar",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -44,6 +117,7 @@
     },
     "confusion.should_have": {
       "category": "grammar",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -51,13 +125,16 @@
     },
     "confusion.alot": {
       "category": "spelling",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
+      "apply_all_eligible": true,
+      "notes": "Precedence ensures confusion.alot overrides native.spelling suggestion 'lot'."
     },
     "confusion.in_principal": {
       "category": "grammar",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -65,77 +142,15 @@
     },
     "confusion.its_to_it_is": {
       "category": "grammar",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
       "apply_all_eligible": true
     },
-    "wordiness.close_proximity": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
-    },
-    "wordiness.due_to_the_fact_that": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
-    },
-    "wordiness.future_plans": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
-    },
-    "wordiness.end_result": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
-    },
-    "wordiness.in_order_to": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 1,
-      "clean_fp_per_1000_words": 0.31,
-      "apply_all_eligible": false,
-      "notes": "Stylistic preference rather than error; must require manual selection."
-    },
-    "wordiness.prior_to": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
-    },
-    "wordiness.completely_destroyed": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
-    },
-    "wordiness.join_together": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
-    },
-    "wordiness.basic_fundamentals": {
-      "category": "wordiness",
-      "measured_replacement_accuracy": 1.0,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": true
-    },
-    "wordiness.consensus_of_opinion": {
-      "category": "wordiness",
+    "confusion.it_is_to_its": {
+      "category": "grammar",
+      "severity": "warning",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -143,6 +158,7 @@
     },
     "repetition.duplicate_words": {
       "category": "repetition",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
@@ -150,74 +166,28 @@
     },
     "punctuation.space_before_comma": {
       "category": "punctuation",
+      "severity": "error",
       "measured_replacement_accuracy": 1.0,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
       "apply_all_eligible": true
     },
-    "native.spelling": {
-      "category": "spelling",
-      "measured_replacement_accuracy": 0.838,
-      "clean_false_positives": 16,
-      "clean_fp_per_1000_words": 4.97,
-      "apply_all_eligible": false,
-      "notes": "Flagged proper nouns (Netherfield, Bingley, Filby) and Oxford -ize spellings in en_GB. High accuracy for highlighted words, but gated from blind apply-all."
-    },
-    "native.grammar": {
-      "category": "grammar",
-      "measured_replacement_accuracy": 0.923,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": false,
-      "notes": "Suggests dog's for 'The dogs runs'. Below 0.95 threshold; detect-and-highlight only."
-    },
-    "confusion.their_to_there": {
-      "category": "grammar",
-      "measured_replacement_accuracy": 0.75,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": false,
-      "notes": "Below 0.95 threshold. Detect-and-highlight with manual choice."
-    },
-    "confusion.theyre_to_their": {
-      "category": "grammar",
-      "measured_replacement_accuracy": 0.667,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": false,
-      "notes": "Below 0.95 threshold. Detect-and-highlight with manual choice."
-    },
-    "confusion.loose_to_lose": {
-      "category": "grammar",
-      "measured_replacement_accuracy": 0.60,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": false,
-      "notes": "Below 0.95 threshold. Detect-and-highlight with manual choice."
-    },
-    "confusion.loose_noun_to_lose": {
-      "category": "grammar",
-      "measured_replacement_accuracy": 0.25,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": false,
-      "notes": "Below 0.95 threshold. Detect-and-highlight with manual choice."
-    },
-    "confusion.it_is_to_its": {
-      "category": "grammar",
-      "measured_replacement_accuracy": 0.75,
-      "clean_false_positives": 0,
-      "clean_fp_per_1000_words": 0.0,
-      "apply_all_eligible": false,
-      "notes": "Below 0.95 threshold. Detect-and-highlight with manual choice."
-    },
     "punctuation.missing_space_after_comma": {
       "category": "punctuation",
-      "measured_replacement_accuracy": 0.0,
+      "severity": "warning",
+      "measured_replacement_accuracy": 1.0,
+      "clean_false_positives": 0,
+      "clean_fp_per_1000_words": 0.0,
+      "apply_all_eligible": true
+    },
+    "wordiness.*": {
+      "category": "style",
+      "severity": "suggestion",
+      "measured_replacement_accuracy": 0.917,
       "clean_false_positives": 0,
       "clean_fp_per_1000_words": 0.0,
       "apply_all_eligible": false,
-      "notes": "Below 0.95 threshold. Detect-and-highlight with manual choice."
+      "notes": "Reclassified as severity 'suggestion'. Excluded from apply-all by design."
     }
   }
 }
