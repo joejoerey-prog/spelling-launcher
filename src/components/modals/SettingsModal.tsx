@@ -13,7 +13,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const current = settingsStore.state;
   const [provider, setProvider] = useState(current.provider);
   const [ollamaUrl, setOllamaUrl] = useState(current.ollamaBaseUrl || 'http://localhost:11434/v1');
-  const [ollamaModel, setOllamaModel] = useState(current.ollamaModel || 'qwen2.5vl:latest');
+  const [ollamaModel, setOllamaModel] = useState(current.ollamaModel || 'llama3.2:3b');
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [ollamaStatus, setOllamaStatus] = useState<'testing' | 'connected' | 'error' | 'idle'>('idle');
   const [ollamaMessage, setOllamaMessage] = useState<string>('');
@@ -201,7 +201,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     type="text"
                     value={ollamaModel}
                     onChange={(e) => setOllamaModel(e.target.value)}
-                    placeholder="qwen2.5vl:latest"
+                    placeholder="llama3.2:3b"
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500"
                   />
                 )}

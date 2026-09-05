@@ -39,12 +39,12 @@ export async function rewriteSelectedPassage(
 
   // Determine base URL and model based on provider
   let baseUrl = 'http://localhost:11434/v1';
-  let model = 'qwen2.5vl:latest';
+  let model = 'llama3.2:3b';
   let apiKey = '';
 
   if (provider === 'ollama') {
     baseUrl = settings.baseUrl || 'http://localhost:11434/v1';
-    model = settings.model || 'qwen2.5vl:latest';
+    model = settings.model || 'llama3.2:3b';
   } else {
     baseUrl = settings.baseUrl || (import.meta.env.VITE_OPENAI_BASE_URL as string) || 'https://api.openai.com/v1';
     model = settings.model || (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini';

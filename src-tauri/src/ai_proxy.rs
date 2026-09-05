@@ -89,7 +89,7 @@ pub async fn rewrite_passage_api(
         .filter(|m| !m.trim().is_empty())
         .unwrap_or_else(|| {
             if is_ollama {
-                "qwen2.5vl:latest".to_string()
+                "llama3.2:3b".to_string()
             } else {
                 "gpt-4o-mini".to_string()
             }

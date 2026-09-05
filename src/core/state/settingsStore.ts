@@ -4,7 +4,7 @@ import { TauriBridge } from '../bridge/tauriBridge';
 const DEFAULT_SETTINGS: AppSettings = {
   provider: 'ollama',
   ollamaBaseUrl: 'http://localhost:11434/v1',
-  ollamaModel: 'qwen2.5vl:latest',
+  ollamaModel: 'llama3.2:3b',
   openaiApiKey: '',
   openaiBaseUrl: 'https://api.openai.com/v1',
   openaiModel: 'gpt-4o-mini',
