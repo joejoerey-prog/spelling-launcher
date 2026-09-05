@@ -99,7 +99,7 @@ The evaluation corpus (`fixtures/gec/en.jsonl`) contains 50 test sentences spann
 
 ### 5.1 Aggregate Metrics Comparison
 
-| Metric | Baseline TypeScript Regex Engine | NSSpellChecker (`checkString`) | Hybrid Engine (Proposed Strategy B) |
+| Metric | Baseline TypeScript Regex Engine | NSSpellChecker (`checkString`) | Hybrid Engine (Strategy H) |
 | :--- | :--- | :--- | :--- |
 | **Spelling Recall** | 100.0% (11/11) | **100.0% (11/11)** | **100.0% (11/11)** |
 | **Spelling Precision** | 100.0% (0 FP) | **100.0% (0 FP)** | **100.0% (0 FP)** |
@@ -168,22 +168,25 @@ spelling-launcher-raycast/
 ---
 
 ## 8. Grammar Strategy Recommendation
-
-In the Phase 0 brief, three potential grammar strategies were outlined:
-- **Strategy A (Native Only)**: Rely exclusively on `NSSpellChecker`. Drop all external rules.
-- **Strategy B (Hybrid: Native + Deterministic Rules + optional Harper)**: Use `NSSpellChecker` for core spelling, grammar, and morphology, augmented by our zero-overhead deterministic confusion and wordiness rules (and optionally `harper-core` for missing tense checks like ID 25).
-- **Strategy C (External FFI / Harper Primary)**: Use `harper-core` or LanguageTool WASM as the primary engine, using `NSSpellChecker` solely as a spellcheck dictionary.
-
-### Recommendation: **Strategy B (Hybrid)**
-1. **Zero Cost & Zero Lag**: The deterministic rules run in **53 microseconds**; running them alongside `NSSpellChecker` (2.9 ms) adds zero perceivable latency.
-2. **Plugs Native Gaps**: Retains 100% detection of style/wordiness and high-frequency English confusion sets (`there/their`, `loose/lose`, `lead/led`) that macOS AppKit intentionally ignores.
-3. **Enhances Agreement Checking**: Gains native subject-verb agreement (`"The dogs runs"`), article agreement (`"an dog"`), and modal harmony (`"Can I has"`).
-4. **Air-Gapped & Lean**: Consumes **0 MB of additional RAM** and requires no background daemon.
-
----
-
-## 9. Next Steps (Awaiting User Sign-Off)
-
-Before commencing Phase 2 implementation, we require user confirmation on the grammar strategy:
-1. Approve **Strategy B (Hybrid: NSSpellChecker + Deterministic Rules)**.
-2. Confirm whether **`harper-core`** should be evaluated as an additional offline Rust layer for tense errors (e.g. ID 25), or if standard native checking + our rules is preferred.
+ 
+ In the Phase 0 brief, three potential grammar strategies were outlined:
+ - **Strategy A (Native Only)**: Rely exclusively on `NSSpellChecker`. Drop all external rules.
+ - **Strategy B (Native + harper-core)**: Original proposal combining `NSSpellChecker` with the `harper-core` crate.
+ - **Strategy C (External FFI / Harper Primary)**: Use `harper-core` or LanguageTool WASM as the primary engine, using `NSSpellChecker` solely as a spellcheck dictionary.
+ - **Strategy H (Hybrid Native + Deterministic Rules)**: What was empirically proven in Phase 1: use `NSSpellChecker` for core spelling, grammar, and morphology, augmented by our zero-overhead deterministic confusion and wordiness rules.
+ 
+ ### Approved: **Strategy H (Hybrid Native + Deterministic)**
+ 1. **Zero Cost & Zero Lag**: The deterministic rules run in **53 microseconds**; running them alongside `NSSpellChecker` (2.9 ms) adds zero perceivable latency.
+ 2. **Plugs Native Gaps**: Retains 100% detection of style/wordiness and high-frequency English confusion sets (`there/their`, `loose/lose`, `lead/led`) that macOS AppKit intentionally ignores.
+ 3. **Enhances Agreement Checking**: Gains native subject-verb agreement (`"The dogs runs"`), article agreement (`"an dog"`), and modal harmony (`"Can I has"`).
+ 4. **Air-Gapped & Lean**: Consumes **0 MB of additional RAM** and requires no background daemon.
+ 5. **Extensible Checker Architecture**: `harper-core` is excluded from Phase 2, but `spellcore` will be designed around a `Checker` trait abstraction so additional offline checkers can be registered modularly if needed.
+ 
+ ---
+ 
+ ## 9. Next Steps
+ 
+ Before Phase 2 integration begins:
+ 1. **Measure Replacement Correctness**: Add `expected_corrected` / `replacement_correct` to the evaluation corpus and report detection recall, detection precision, and top-1 replacement accuracy.
+ 2. **Held-Out Corpus Validation**: Evaluate at least 300 sentences from natural English prose (with ≥150 clean sentences) and report false positives per 1,000 words per rule (especially homophone confusion sets).
+ 3. **Gate Apply-All on Replacement Accuracy**: Enforce a strict >95% replacement accuracy gate for apply-all actions.
