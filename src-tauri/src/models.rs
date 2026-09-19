@@ -35,6 +35,16 @@ pub struct AppSetting {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SettingsMigration {
+    pub schema_version: i64,
+    pub schema_version_from: i64,
+    pub schema_version_to: i64,
+    pub prior_json_payload: String,
+    pub applied_at: String,
+    pub acknowledged_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RewritePassageRequest {
     pub text: String,
     pub tone: String,      // "casual", "professional", "academic", "confident", "friendly", "direct"

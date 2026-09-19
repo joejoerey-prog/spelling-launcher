@@ -2,6 +2,7 @@
 name = "spellcore"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 authors = ["Antigravity"]
 description = "Native macOS text checking and deterministic rules engine for Spelling Launcher"
 
@@ -13,3 +14,16 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 regex = "1"
 thiserror = "1"
+
+[[test]]
+name = "native_tests"
+harness = false
+
+[[test]]
+name = "dirty_paragraph_tests"
+harness = false
+
+[[bench]]
+name = "engine_bench"
+harness = false
+

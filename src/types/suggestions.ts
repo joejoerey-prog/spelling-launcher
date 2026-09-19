@@ -24,6 +24,12 @@ export interface DeterministicIssue {
   suggestedText?: string;
   matchStart?: number;
   matchEnd?: number;
+  applyAllEligible?: boolean;
+  ruleId?: string;
+  rawStartOffset?: number;
+  rawEndOffset?: number;
+  replacement?: string;
+  suggestions?: string[];
 }
 
 export type RewriteTone = 'natural' | 'casual' | 'professional' | 'academic' | 'confident' | 'friendly' | 'direct';

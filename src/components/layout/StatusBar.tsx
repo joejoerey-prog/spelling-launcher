@@ -25,6 +25,14 @@ export const StatusBar: React.FC = () => {
         <span>
           Est. Reading Time: <strong className="text-slate-200">{state.stats.readingTimeMinutes} min</strong>
         </span>
+        {state.stats.readabilityScore !== undefined && (
+          <>
+            <span>•</span>
+            <span title={`Flesch Reading Ease: ${state.stats.readabilityScore}/100`}>
+              Readability: <strong className="text-slate-200">{state.stats.readabilityLabel} (Grade {state.stats.readabilityGrade})</strong>
+            </span>
+          </>
+        )}
         {totalIssues > 0 && (
           <>
             <span>•</span>

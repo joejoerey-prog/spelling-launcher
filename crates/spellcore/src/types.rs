@@ -19,6 +19,19 @@ pub enum Severity {
     Suggestion,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CheckMode {
+    Document,
+    Fragment,
+}
+
+impl Default for CheckMode {
+    fn default() -> Self {
+        Self::Document
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Issue {
     pub id: String,

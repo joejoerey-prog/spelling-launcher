@@ -6,6 +6,8 @@ export interface SentenceNode {
   trimmedText: string;
   startOffset: number;
   endOffset: number;
+  documentStartOffset?: number;
+  documentEndOffset?: number;
   isHeading?: boolean;
   isListItem?: boolean;
   isBlockquote?: boolean;
@@ -20,6 +22,8 @@ export interface ParagraphNode {
   sentences: SentenceNode[];
   isCodeBlock?: boolean;
   isBlank?: boolean;
+  startOffset?: number;
+  endOffset?: number;
 }
 
 export interface DocumentModel {
@@ -38,4 +42,7 @@ export interface DocumentStats {
   paragraphCount: number;
   readingTimeMinutes: number;
   averageSentenceLength: number;
+  readabilityScore?: number;
+  readabilityGrade?: number;
+  readabilityLabel?: string;
 }

@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"Default permissions for WordCraft desktop","local":true,"windows":["main"],"permissions":["core:default","dialog:default"]}}
+{"default":{"identifier":"default","description":"Default permissions for Spelling Launcher desktop","local":true,"windows":["main"],"permissions":["core:default","dialog:default"]}}

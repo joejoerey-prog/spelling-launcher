@@ -26,13 +26,20 @@ This is a very unique approach for the the user.`;
     expect(targetSentences.length).toBeGreaterThan(0);
     fireEvent.click(targetSentences[0]);
 
-    // 3. Verify Suggestion Pane activates and displays rewrite choices
+    // 3. Verify Suggestion Pane activates and displays Generate Rewrites button
     await waitFor(() => {
       expect(screen.getByText('Active Sentence')).toBeInTheDocument();
-      expect(screen.getByText(/Rewrite Options/i)).toBeInTheDocument();
+      expect(screen.getByText('Rewrite Options')).toBeInTheDocument();
     });
 
+    const generateBtn = screen.getByRole('button', { name: /generate rewrites/i });
+    fireEvent.click(generateBtn);
+
     // 4. Accept the Concise / Active rewrite option
+    await waitFor(() => {
+      const acceptButtons = screen.getAllByRole('button', { name: /accept/i });
+      expect(acceptButtons.length).toBeGreaterThan(0);
+    });
     const acceptButtons = screen.getAllByRole('button', { name: /accept/i });
     expect(acceptButtons.length).toBeGreaterThan(0);
     fireEvent.click(acceptButtons[0]);

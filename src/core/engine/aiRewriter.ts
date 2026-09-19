@@ -45,6 +45,34 @@ export async function rewriteSelectedPassage(
   if (provider === 'ollama') {
     baseUrl = settings.baseUrl || 'http://localhost:11434/v1';
     model = settings.model || 'llama3.2:3b';
+
+    // Point-of-use validation: verify model availability in local Ollama before dispatching request
+    const host = baseUrl.replace(/\/v1\/?$/, '');
+    try {
+      const tagRes = await fetch(`${host}/api/tags`);
+      if (tagRes.ok) {
+        const tagData = await tagRes.json();
+        const available: string[] = (tagData.models || []).map((m: any) => m.name);
+        const hasModel = available.some(
+          (m) => m === model || m.startsWith(`${model}:`) || model.startsWith(`${m}:`)
+        );
+        if (!hasModel && available.length > 0) {
+          const localVariations = generateLocalRewrites(sentenceId, sentenceText, options.tone, options.length);
+          return {
+            options: localVariations,
+            error: `Model '${model}' is not installed in local Ollama. Run 'ollama pull ${model}' or select an installed model in Settings.`,
+            isAi: false,
+          };
+        }
+      }
+    } catch {
+      const localVariations = generateLocalRewrites(sentenceId, sentenceText, options.tone, options.length);
+      return {
+        options: localVariations,
+        error: `Cannot reach local Ollama on port 11434. Used local heuristic rewrite.`,
+        isAi: false,
+      };
+    }
   } else {
     baseUrl = settings.baseUrl || (import.meta.env.VITE_OPENAI_BASE_URL as string) || 'https://api.openai.com/v1';
     model = settings.model || (import.meta.env.VITE_OPENAI_MODEL as string) || 'gpt-4o-mini';

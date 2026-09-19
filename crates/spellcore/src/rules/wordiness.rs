@@ -89,6 +89,102 @@ const DEFS: &[WordinessDef] = &[
         pattern: r"(?i)\bconsensus\s+of\s+opinion\b",
         replacement: "consensus",
     },
+    WordinessDef {
+        rule_id: "wordiness.at_the_present_time",
+        message: "'At the present time' is wordy. Simplify to 'currently' or 'now'.",
+        pattern: r"(?i)\bat\s+the\s+present\s+time\b",
+        replacement: "currently",
+    },
+    WordinessDef {
+        rule_id: "wordiness.at_all_times",
+        message: "'At all times' is wordy. Simplify to 'always'.",
+        pattern: r"(?i)\bat\s+all\s+times\b",
+        replacement: "always",
+    },
+    WordinessDef {
+        rule_id: "wordiness.for_the_purpose_of",
+        message: "'For the purpose of' is wordy. Simplify to 'to'.",
+        pattern: r"(?i)\bfor\s+the\s+purpose\s+of\b",
+        replacement: "to",
+    },
+    WordinessDef {
+        rule_id: "wordiness.in_the_event_that",
+        message: "'In the event that' is wordy. Simplify to 'if'.",
+        pattern: r"(?i)\bin\s+the\s+event\s+that\b",
+        replacement: "if",
+    },
+    WordinessDef {
+        rule_id: "wordiness.has_the_ability_to",
+        message: "'Has the ability to' is wordy. Simplify to 'can'.",
+        pattern: r"(?i)\bhas\s+the\s+ability\s+to\b",
+        replacement: "can",
+    },
+    WordinessDef {
+        rule_id: "wordiness.a_large_number_of",
+        message: "'A large number of' is wordy. Simplify to 'many'.",
+        pattern: r"(?i)\ba\s+large\s+number\s+of\b",
+        replacement: "many",
+    },
+    WordinessDef {
+        rule_id: "wordiness.utilize",
+        message: "'Utilize' is often pretentious. Simplify to 'use'.",
+        pattern: r"(?i)\butilize\b",
+        replacement: "use",
+    },
+    WordinessDef {
+        rule_id: "wordiness.utilizes",
+        message: "'Utilizes' is often pretentious. Simplify to 'uses'.",
+        pattern: r"(?i)\butilizes\b",
+        replacement: "uses",
+    },
+    WordinessDef {
+        rule_id: "wordiness.utilized",
+        message: "'Utilized' is often pretentious. Simplify to 'used'.",
+        pattern: r"(?i)\butilized\b",
+        replacement: "used",
+    },
+    WordinessDef {
+        rule_id: "wordiness.make_a_decision",
+        message: "'Make a decision' is wordy. Simplify to 'decide'.",
+        pattern: r"(?i)\bmake\s+a\s+decision\b",
+        replacement: "decide",
+    },
+    WordinessDef {
+        rule_id: "wordiness.take_action",
+        message: "'Take action' can be simplified to 'act'.",
+        pattern: r"(?i)\btake\s+action\b",
+        replacement: "act",
+    },
+    WordinessDef {
+        rule_id: "wordiness.first_and_foremost",
+        message: "'First and foremost' is redundant. Simplify to 'first'.",
+        pattern: r"(?i)\bfirst\s+and\s+foremost\b",
+        replacement: "first",
+    },
+    WordinessDef {
+        rule_id: "wordiness.give_consideration_to",
+        message: "'Give consideration to' is wordy. Simplify to 'consider'.",
+        pattern: r"(?i)\bgive\s+consideration\s+to\b",
+        replacement: "consider",
+    },
+    WordinessDef {
+        rule_id: "wordiness.meet_with",
+        message: "In British English, use 'meet' rather than 'meet with'.",
+        pattern: r"(?i)\bmeet\s+with\b",
+        replacement: "meet",
+    },
+    WordinessDef {
+        rule_id: "wordiness.consult_with",
+        message: "In British English, use 'consult' rather than 'consult with'.",
+        pattern: r"(?i)\bconsult\s+with\b",
+        replacement: "consult",
+    },
+    WordinessDef {
+        rule_id: "wordiness.talk_with",
+        message: "In British English, use 'talk to' rather than 'talk with'.",
+        pattern: r"(?i)\btalk\s+with\b",
+        replacement: "talk to",
+    },
 ];
 
 static COMPILED_WORDINESS_RULES: LazyLock<Vec<CompiledWordinessRule>> = LazyLock::new(|| {
@@ -102,24 +198,37 @@ static COMPILED_WORDINESS_RULES: LazyLock<Vec<CompiledWordinessRule>> = LazyLock
         .collect()
 });
 
+fn match_capitalization(original: &str, replacement: &str) -> String {
+    if original.starts_with(|c: char| c.is_uppercase()) {
+        let mut chars = replacement.chars();
+        match chars.next() {
+            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+            None => replacement.to_string(),
+        }
+    } else {
+        replacement.to_string()
+    }
+}
+
 pub fn check_wordiness_rules(text: &str) -> Vec<Issue> {
     let mut issues = Vec::new();
 
     for rule in COMPILED_WORDINESS_RULES.iter() {
         for mat in rule.regex.find_iter(text) {
-            let rep = rule.regex.replace(mat.as_str(), rule.replacement).to_string();
+            let base_rep = rule.regex.replace(mat.as_str(), rule.replacement).to_string();
+            let rep = match_capitalization(mat.as_str(), &base_rep);
             issues.push(Issue {
                 id: format!("{}-{}", rule.rule_id, mat.start()),
                 rule_id: rule.rule_id.to_string(),
                 category: Category::Style,
-                severity: Severity::Suggestion, // Fix C: Suggestion severity
+                severity: Severity::Suggestion, // Suggestion severity
                 message: rule.message.to_string(),
                 start_offset: mat.start(),
                 end_offset: mat.end(),
                 matched_text: mat.as_str().to_string(),
                 replacement: Some(rep.clone()),
                 suggestions: vec![rep],
-                apply_all_eligible: false, // Fix C: Excluded from apply-all by design
+                apply_all_eligible: false, // Excluded from apply-all by design
             });
         }
     }

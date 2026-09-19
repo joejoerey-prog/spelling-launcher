@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, MessageSquare, RefreshCw, ArrowRight } from 'lucide-react';
 import { editorStore } from '../../core/state/editorStore';
 import { IssueCard } from './IssueCard';
@@ -7,6 +7,11 @@ import { ToneLengthSelector } from './ToneLengthSelector';
 import { Button } from '../ui/Button';
 
 export const SuggestionPane: React.FC = () => {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    return editorStore.subscribe(() => setTick((t) => t + 1));
+  }, []);
+
   const state = editorStore.getState;
   const sentence = editorStore.getSelectedSentence();
   const [customText, setCustomText] = useState('');
@@ -90,7 +95,19 @@ export const SuggestionPane: React.FC = () => {
             <div className="space-y-2.5">
               <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                 <span>Rewrite Options</span>
-                <span>{state.rewriteOptions.length} choices</span>
+                <div className="flex items-center gap-2">
+                  <span>{state.rewriteOptions.length} choices</span>
+                  {state.rewriteOptions.length > 0 && (
+                    <button
+                      onClick={handleRegenerate}
+                      className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1"
+                      title="Regenerate Options"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Regenerate
+                    </button>
+                  )}
+                </div>
               </div>
 
               {state.isLoadingRewrites ? (
@@ -110,8 +127,19 @@ export const SuggestionPane: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 text-center rounded-xl bg-slate-850 border border-slate-800 text-xs text-slate-400">
-                  No variations generated. Try changing the tone or length filter.
+                <div className="p-4 text-center rounded-xl bg-slate-850 border border-slate-800 space-y-3">
+                  <p className="text-xs text-slate-400">
+                    Click below to generate rewrite options for this sentence.
+                  </p>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => editorStore.generateRewritesForSelected()}
+                    className="w-full text-xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 mr-1" />
+                    Generate Rewrites
+                  </Button>
                 </div>
               )}
             </div>

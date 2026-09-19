@@ -1,9 +1,28 @@
+# Dependencies
 node_modules/
+
+# Production build outputs
 dist/
 dist-ssr/
+/target/
+src-tauri/target/
+
+# Python cache and test artifacts
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.benchmarks/
+
+# Databases and local application state
+*.sqlite
+*.sqlite3
+*.db
 *.local
+*.bak
+.DS_Store
+
+# Secrets and environment configs
 .env
 .env.*.local
-src-tauri/target/
-.DS_Store
-*.bak
+

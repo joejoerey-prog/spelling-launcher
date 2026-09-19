@@ -8,6 +8,11 @@ import { rulesStore } from '../../core/state/rulesStore';
 import { isTauri, TauriBridge } from '../../core/bridge/tauriBridge';
 
 export const SourceEditorPane: React.FC = () => {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    return editorStore.subscribe(() => setTick((t) => t + 1));
+  }, []);
+
   const state = editorStore.getState;
   const [rawMode, setRawMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -233,11 +238,11 @@ Please review the document ,and let us know your thoughts.`;
                     // Amber Wavy Underline: Grammar & Confusion Homophones
                     textStyles += 'underline decoration-amber-400 decoration-wavy decoration-2 underline-offset-4 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20 ';
                   } else if (hasWordiness) {
-                    // Sky Blue Underline: Wordiness, Redundancy, Plain English
-                    textStyles += 'underline decoration-sky-400 decoration-solid decoration-2 underline-offset-4 bg-sky-500/10 text-sky-100 hover:bg-sky-500/20 ';
+                    // Sky Blue Dotted Underline: Wordiness, Redundancy, Plain English, Style
+                    textStyles += 'underline decoration-sky-400 decoration-dotted decoration-2 underline-offset-4 bg-sky-500/10 text-sky-100 hover:bg-sky-500/20 ';
                   } else if (hasPunctuation) {
-                    // Purple Underline: Punctuation & Typography
-                    textStyles += 'underline decoration-purple-400 decoration-solid decoration-2 underline-offset-4 bg-purple-500/10 text-purple-100 hover:bg-purple-500/20 ';
+                    // Purple Dotted Underline: Punctuation & Typography
+                    textStyles += 'underline decoration-purple-400 decoration-dotted decoration-2 underline-offset-4 bg-purple-500/10 text-purple-100 hover:bg-purple-500/20 ';
                   } else if (hasIssues) {
                     textStyles += 'underline decoration-indigo-400 decoration-solid decoration-2 underline-offset-4 bg-indigo-500/10 text-indigo-100 hover:bg-indigo-500/20 ';
                   } else {

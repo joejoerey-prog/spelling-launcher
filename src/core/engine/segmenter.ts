@@ -1,4 +1,5 @@
 import { ParagraphNode, SentenceNode, DocumentModel, DocumentStats } from '../../types/document';
+import { computeReadability } from '../utils/readability';
 
 const COMMON_ABBREVIATIONS = new Set([
   'mr.', 'mrs.', 'ms.', 'dr.', 'prof.', 'sr.', 'jr.',
@@ -122,6 +123,8 @@ export function parseDocument(rawContent: string, filePath: string | null = null
   let currentParagraphLines: string[] = [];
   let paragraphIndex = 0;
 
+  let searchOffset = 0;
+
   const flushParagraph = () => {
     if (currentParagraphLines.length === 0) return;
     const rawText = currentParagraphLines.join('\n');
@@ -155,6 +158,18 @@ export function parseDocument(rawContent: string, filePath: string | null = null
       isBlockquote
     );
 
+    const pStartIdx = rawContent.indexOf(rawText, searchOffset);
+    const startOffset = pStartIdx >= 0 ? pStartIdx : searchOffset;
+    const endOffset = startOffset + rawText.length;
+    if (pStartIdx >= 0) {
+      searchOffset = endOffset;
+    }
+
+    for (const s of sentences) {
+      s.documentStartOffset = startOffset + s.startOffset;
+      s.documentEndOffset = startOffset + s.endOffset;
+    }
+
     paragraphs.push({
       id: `p${paragraphIndex}`,
       index: paragraphIndex,
@@ -162,6 +177,8 @@ export function parseDocument(rawContent: string, filePath: string | null = null
       sentences,
       isCodeBlock: false,
       isBlank: rawText.trim().length === 0,
+      startOffset,
+      endOffset,
     });
 
     paragraphIndex++;
@@ -180,6 +197,13 @@ export function parseDocument(rawContent: string, filePath: string | null = null
         codeBlockBuffer.push(line);
         inCodeBlock = false;
         const codeText = codeBlockBuffer.join('\n');
+        const pStartIdx = rawContent.indexOf(codeText, searchOffset);
+        const startOffset = pStartIdx >= 0 ? pStartIdx : searchOffset;
+        const endOffset = startOffset + codeText.length;
+        if (pStartIdx >= 0) {
+          searchOffset = endOffset;
+        }
+
         paragraphs.push({
           id: `p${paragraphIndex}`,
           index: paragraphIndex,
@@ -187,6 +211,8 @@ export function parseDocument(rawContent: string, filePath: string | null = null
           sentences: [],
           isCodeBlock: true,
           isBlank: false,
+          startOffset,
+          endOffset,
         });
         paragraphIndex++;
         codeBlockBuffer = [];
@@ -208,6 +234,8 @@ export function parseDocument(rawContent: string, filePath: string | null = null
         sentences: [],
         isCodeBlock: false,
         isBlank: true,
+        startOffset: searchOffset,
+        endOffset: searchOffset,
       });
       paragraphIndex++;
     } else {
@@ -269,6 +297,7 @@ export function calculateDocumentStats(rawContent: string, paragraphs: Paragraph
   const paragraphCount = paragraphs.filter((p) => !p.isBlank).length;
   const readingTimeMinutes = Math.max(1, Math.ceil(words / 225));
   const avgSentenceLength = sentenceCount > 0 ? Math.round((words / sentenceCount) * 10) / 10 : 0;
+  const readability = computeReadability(rawContent, words, sentenceCount);
 
   return {
     characterCount: characters,
@@ -277,5 +306,8 @@ export function calculateDocumentStats(rawContent: string, paragraphs: Paragraph
     paragraphCount,
     readingTimeMinutes,
     averageSentenceLength: avgSentenceLength,
+    readabilityScore: readability.score,
+    readabilityGrade: readability.gradeLevel,
+    readabilityLabel: readability.label,
   };
 }

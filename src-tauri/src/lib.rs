@@ -7,11 +7,57 @@ use tauri::State;
 use db::DatabaseManager;
 use models::{
     DocumentInfo, FileOperationResult, IgnoredTerm, RewritePassageRequest,
-    RewritePassageResponse, UserRule,
+    RewritePassageResponse, SettingsMigration, UserRule,
 };
+
+use spellcore::SpellcoreEngine;
+use std::sync::Arc;
 
 pub struct AppState {
     pub db: DatabaseManager,
+    pub engine: Arc<SpellcoreEngine>,
+    pub tag: isize,
+}
+
+#[tauri::command]
+fn check_document(
+    state: State<AppState>,
+    text: String,
+    language: Option<String>,
+) -> Result<Vec<spellcore::Issue>, String> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let lang = language.unwrap_or_else(|| "en_GB".to_string());
+        state.engine.check_document(&text, &lang, state.tag)
+    }))
+    .map_err(|e| format!("Error in text check: {:?}", e))
+}
+
+#[tauri::command]
+fn check_paragraph(
+    state: State<AppState>,
+    paragraph_text: String,
+    paragraph_offset: usize,
+    language: Option<String>,
+) -> Result<Vec<spellcore::Issue>, String> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let lang = language.unwrap_or_else(|| "en_GB".to_string());
+        state.engine.check_paragraph(&paragraph_text, paragraph_offset, &lang, state.tag)
+    }))
+    .map_err(|e| format!("Error in paragraph check: {:?}", e))
+}
+
+#[tauri::command]
+fn learn_word(state: State<AppState>, word: String) -> Result<(), String> {
+    state.db.add_ignored_term(&word)?;
+    state.engine.bump_dictionary_revision();
+    Ok(())
+}
+
+#[tauri::command]
+fn ignore_word(state: State<AppState>, word: String) -> Result<(), String> {
+    state.db.add_ignored_term(&word)?;
+    state.engine.bump_dictionary_revision();
+    Ok(())
 }
 
 #[tauri::command]
@@ -106,17 +152,31 @@ fn set_app_setting(state: State<AppState>, key: String, value: String) -> Result
 }
 
 #[tauri::command]
+fn get_unacknowledged_migration(state: State<AppState>) -> Result<Option<SettingsMigration>, String> {
+    state.db.get_unacknowledged_migration()
+}
+
+#[tauri::command]
+fn acknowledge_migration(state: State<AppState>, version: i64) -> Result<(), String> {
+    state.db.acknowledge_migration(version)
+}
+
+#[tauri::command]
 async fn rewrite_passage(req: RewritePassageRequest) -> Result<RewritePassageResponse, String> {
     ai_proxy::rewrite_passage_api(req).await
 }
 
 pub fn run() {
     let db_manager = DatabaseManager::new().expect("Failed to initialize SQLite database");
+    let engine = Arc::new(SpellcoreEngine::new());
+    let tag = SpellcoreEngine::create_document_tag();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(AppState {
             db: db_manager,
+            engine,
+            tag,
         })
         .invoke_handler(tauri::generate_handler![
             read_document,
@@ -135,7 +195,13 @@ pub fn run() {
             remove_ignored,
             get_app_setting,
             set_app_setting,
+            get_unacknowledged_migration,
+            acknowledge_migration,
             rewrite_passage,
+            check_document,
+            check_paragraph,
+            learn_word,
+            ignore_word,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Spelling Launcher application");

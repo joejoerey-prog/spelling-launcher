@@ -2,6 +2,7 @@
 name = "spellcheck-cli"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 authors = ["Antigravity"]
 description = "CLI artifact for Raycast integration backed by spellcore"
 

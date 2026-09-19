@@ -23,6 +23,15 @@ export interface DocumentInfo {
   snippet: string;
 }
 
+export interface SettingsMigration {
+  schema_version: number;
+  schema_version_from: number;
+  schema_version_to: number;
+  prior_json_payload: string;
+  applied_at: string;
+  acknowledged_at: string | null;
+}
+
 export interface AppSettings {
   provider: 'ollama' | 'local' | 'openai' | 'anthropic';
   ollamaBaseUrl: string;
@@ -30,9 +39,10 @@ export interface AppSettings {
   openaiApiKey?: string;
   openaiBaseUrl?: string;
   openaiModel?: string;
-  maxSentenceLengthThreshold: number;
-  autoCheckPassive: boolean;
   autoCheckTypography: boolean;
   autoCheckRepetition: boolean;
   theme: 'dark' | 'light' | 'system';
+  language?: 'en_GB' | 'en_US';
+  maxSentenceLengthThreshold?: number;
+  autoCheckPassive?: boolean;
 }

@@ -10,6 +10,7 @@ import {
   BookOpen,
   Rocket,
   Loader2,
+  CheckCheck,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { editorStore } from '../../core/state/editorStore';
@@ -21,18 +22,38 @@ export interface AppHeaderProps {
   onOpenSettings: () => void;
   onOpenRules: () => void;
   onOpenExport: () => void;
+  onOpenApplyAll?: () => void;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenSettings,
   onOpenRules,
   onOpenExport,
+  onOpenApplyAll,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isOpeningFile, setIsOpeningFile] = useState(false);
+  const [, setTick] = useState(0);
+
+  React.useEffect(() => {
+    return editorStore.subscribe(() => setTick((t) => t + 1));
+  }, []);
+
   const state = editorStore.getState;
   const canUndo = state.historyIndex > 0;
   const canRedo = state.historyIndex < state.history.length - 1;
+
+  const eligibleCount = React.useMemo(() => {
+    let count = 0;
+    for (const issues of state.allDocumentIssues.values()) {
+      for (const issue of issues) {
+        if (issue.applyAllEligible && issue.replacement) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }, [state.allDocumentIssues]);
 
   const handleNewDocument = () => {
     if (state.document.isDirty) {
@@ -189,6 +210,22 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           disabled={!canRedo}
           title="Redo (Cmd+Shift+Z)"
         />
+
+        {eligibleCount > 0 && onOpenApplyAll && (
+          <>
+            <div className="h-5 w-px bg-slate-800 mx-1" />
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<CheckCheck className="w-4 h-4 text-emerald-400" />}
+              onClick={onOpenApplyAll}
+              className="bg-emerald-950/50 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/60 shadow-sm"
+              title="Review & Apply All Gate-Verified Safe Fixes"
+            >
+              Apply Safe ({eligibleCount})
+            </Button>
+          </>
+        )}
 
         <div className="h-5 w-px bg-slate-800 mx-1" />
 

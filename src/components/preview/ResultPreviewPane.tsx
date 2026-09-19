@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, Copy, Download, GitCommit, CheckCheck } from 'lucide-react';
 import { editorStore } from '../../core/state/editorStore';
 import { DocumentStats } from './DocumentStats';
@@ -10,6 +10,11 @@ export interface ResultPreviewPaneProps {
 }
 
 export const ResultPreviewPane: React.FC<ResultPreviewPaneProps> = ({ onOpenExport }) => {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    return editorStore.subscribe(() => setTick((t) => t + 1));
+  }, []);
+
   const state = editorStore.getState;
   const [showSessionDiffs, setShowSessionDiffs] = useState(false);
   const [copied, setCopied] = useState(false);

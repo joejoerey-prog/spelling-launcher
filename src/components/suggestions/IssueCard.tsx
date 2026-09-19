@@ -4,7 +4,6 @@ import { DeterministicIssue } from '../../types/suggestions';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { editorStore } from '../../core/state/editorStore';
-import { rulesStore } from '../../core/state/rulesStore';
 
 export interface IssueCardProps {
   issue: DeterministicIssue;
@@ -73,12 +72,15 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
     editorStore.applyIssueFix(issue);
   };
 
-  const handleIgnoreWord = async () => {
-    if (issue.category === 'repetition' && issue.matchStart !== undefined && issue.matchEnd !== undefined) {
-      const match = issue.originalText.slice(issue.matchStart, issue.matchEnd).split(/\s+/)[0];
+  const handleIgnore = () => {
+    editorStore.ignoreIssue(issue);
+  };
+
+  const handleLearnWord = () => {
+    if (issue.matchStart !== undefined && issue.matchEnd !== undefined) {
+      const match = issue.originalText.slice(issue.matchStart, issue.matchEnd).trim();
       if (match) {
-        await rulesStore.addIgnoredTerm(match);
-        editorStore.refreshAllIssues();
+        editorStore.learnWord(match);
       }
     }
   };
@@ -97,23 +99,53 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
 
       <p className="text-xs text-slate-400 leading-normal">{issue.description}</p>
 
-      {issue.suggestedText && (
-        <div className="flex items-center justify-between gap-2 pt-1">
+      {issue.suggestions && issue.suggestions.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span className="text-[10px] text-slate-400 uppercase font-semibold">Suggestions:</span>
+          {issue.suggestions.map((sug, idx) => (
+            <button
+              key={idx}
+              onClick={() => editorStore.applyIssueFix(issue, sug)}
+              className="text-xs px-2 py-0.5 rounded-md bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-500/30 transition-colors font-medium flex items-center gap-1 cursor-pointer"
+              title={`Replace with "${sug}"`}
+            >
+              <Check className="w-2.5 h-2.5" />
+              {sug}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-2 pt-1">
+        {issue.suggestedText ? (
           <div className="text-xs font-mono text-emerald-300 bg-emerald-950/40 px-2 py-1 rounded border border-emerald-500/20 truncate flex-1">
             {issue.suggestedText}
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {issue.category === 'repetition' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleIgnoreWord}
-                title="Add to ignored dictionary"
-                className="text-[11px] px-2 py-1 text-slate-400 hover:text-slate-200"
-              >
-                <EyeOff className="w-3 h-3 mr-1" /> Ignore
-              </Button>
-            )}
+        ) : (
+          <div className="flex-1" />
+        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {issue.category === 'spelling' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLearnWord}
+              title="Learn word in macOS dictionary"
+              className="text-[11px] px-2 py-1 text-slate-400 hover:text-slate-200"
+            >
+              <BookOpen className="w-3 h-3 mr-1" /> Learn
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleIgnore}
+            title="Ignore issue (suppresses rule after 3 rejections)"
+            className="text-[11px] px-2 py-1 text-slate-400 hover:text-slate-200"
+          >
+            <EyeOff className="w-3 h-3 mr-1" /> Ignore
+          </Button>
+          {issue.suggestedText && (
             <Button
               variant="success"
               size="sm"
@@ -122,9 +154,9 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
             >
               <Check className="w-3 h-3 mr-1" /> Fix
             </Button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </Card>
   );
 };

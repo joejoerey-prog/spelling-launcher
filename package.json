@@ -1,7 +1,10 @@
 {
   "name": "spelling-launcher",
-  "private": true,
+  "productName": "Spelling Launcher",
+  "description": "Private, local-first sentence writing, checking, and rewriting desktop application for macOS",
   "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",

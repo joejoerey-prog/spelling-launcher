@@ -8,6 +8,7 @@ import { ResultPreviewPane } from './components/preview/ResultPreviewPane';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { RuleManagerModal } from './components/modals/RuleManagerModal';
 import { ExportModal } from './components/modals/ExportModal';
+import { ApplyAllModal } from './components/modals/ApplyAllModal';
 import { Toast } from './components/ui/Toast';
 import { editorStore } from './core/state/editorStore';
 import { rulesStore } from './core/state/rulesStore';
@@ -19,6 +20,7 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isApplyAllOpen, setIsApplyAllOpen] = useState(false);
 
   useEffect(() => {
     // Subscribe to state updates
@@ -55,6 +57,7 @@ export const App: React.FC = () => {
         setIsSettingsOpen(false);
         setIsRulesOpen(false);
         setIsExportOpen(false);
+        setIsApplyAllOpen(false);
       }
     };
 
@@ -77,6 +80,7 @@ export const App: React.FC = () => {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenRules={() => setIsRulesOpen(true)}
         onOpenExport={() => setIsExportOpen(true)}
+        onOpenApplyAll={() => setIsApplyAllOpen(true)}
       />
 
       {/* Main 3-Pane Editor */}
@@ -101,6 +105,10 @@ export const App: React.FC = () => {
       <ExportModal
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
+      />
+      <ApplyAllModal
+        isOpen={isApplyAllOpen}
+        onClose={() => setIsApplyAllOpen(false)}
       />
 
       {/* Success & Error Feedback Toasts */}

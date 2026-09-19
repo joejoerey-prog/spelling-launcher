@@ -1,4 +1,4 @@
-import { DocumentInfo, IgnoredTerm, UserRule } from '../../types/database';
+import { DocumentInfo, IgnoredTerm, SettingsMigration, UserRule } from '../../types/database';
 import { RewritePassageRequest, RewritePassageResponse, FileOperationResult } from '../../types/tauriBridgeTypes';
 
 // Check if running inside desktop Tauri environment
@@ -247,6 +247,25 @@ export const TauriBridge = {
     }
   },
 
+  async getUnacknowledgedMigration(): Promise<SettingsMigration | null> {
+    if (isTauri()) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return invoke<SettingsMigration | null>('get_unacknowledged_migration');
+    } else {
+      const stored = localStorage.getItem(MOCK_STORAGE_PREFIX + 'unack_migration');
+      return stored ? JSON.parse(stored) : null;
+    }
+  },
+
+  async acknowledgeMigration(version: number): Promise<void> {
+    if (isTauri()) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return invoke('acknowledge_migration', { version });
+    } else {
+      localStorage.removeItem(MOCK_STORAGE_PREFIX + 'unack_migration');
+    }
+  },
+
   async rewritePassage(req: RewritePassageRequest): Promise<RewritePassageResponse> {
     if (isTauri()) {
       const { invoke } = await import('@tauri-apps/api/core');
@@ -264,6 +283,36 @@ export const TauriBridge = {
         latency_ms: 120,
         provider: 'Browser-Local-Simulation',
       };
+    }
+  },
+
+  async checkDocument(text: string, language?: string): Promise<any[]> {
+    if (isTauri()) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return invoke<any[]>('check_document', { text, language });
+    }
+    return [];
+  },
+
+  async checkParagraph(paragraphText: string, paragraphOffset: number, language?: string): Promise<any[]> {
+    if (isTauri()) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return invoke<any[]>('check_paragraph', { paragraphText, paragraphOffset, language });
+    }
+    return [];
+  },
+
+  async learnWord(word: string): Promise<void> {
+    if (isTauri()) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return invoke('learn_word', { word });
+    }
+  },
+
+  async ignoreWord(word: string): Promise<void> {
+    if (isTauri()) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      return invoke('ignore_word', { word });
     }
   },
 };

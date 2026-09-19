@@ -2,7 +2,7 @@ use rusqlite::{params, Connection, Result};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use crate::models::{DocumentInfo, IgnoredTerm, UserRule};
+use crate::models::{DocumentInfo, IgnoredTerm, SettingsMigration, UserRule};
 
 pub struct DatabaseManager {
     conn: Mutex<Connection>,
@@ -25,6 +25,7 @@ impl DatabaseManager {
             conn: Mutex::new(conn),
         };
         mgr.init_tables().map_err(|e| format!("Database init failed: {}", e))?;
+        mgr.run_settings_migration().map_err(|e| format!("Settings migration failed: {}", e))?;
         Ok(mgr)
     }
 
@@ -35,6 +36,7 @@ impl DatabaseManager {
             conn: Mutex::new(conn),
         };
         mgr.init_tables().map_err(|e| format!("Database init failed: {}", e))?;
+        mgr.run_settings_migration().map_err(|e| format!("Settings migration failed: {}", e))?;
         Ok(mgr)
     }
 
@@ -80,6 +82,31 @@ impl DatabaseManager {
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             )",
+            [],
+        )?;
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS schema_metadata (
+                key TEXT PRIMARY KEY,
+                value INTEGER NOT NULL
+            )",
+            [],
+        )?;
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS settings_migrations (
+                schema_version INTEGER PRIMARY KEY,
+                schema_version_from INTEGER NOT NULL,
+                schema_version_to INTEGER NOT NULL,
+                prior_json_payload TEXT NOT NULL,
+                applied_at TEXT NOT NULL DEFAULT (datetime('now')),
+                acknowledged_at TEXT DEFAULT NULL
+            )",
+            [],
+        )?;
+
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_settings_migrations_version ON settings_migrations(schema_version)",
             [],
         )?;
 
@@ -289,6 +316,124 @@ impl DatabaseManager {
         ).map_err(|e| e.to_string())?;
         Ok(())
     }
+
+    // --- Settings Migrations ---
+    pub fn run_settings_migration(&self) -> Result<(), String> {
+        let mut conn = self.conn.lock().unwrap();
+        let current_version: i64 = conn
+            .query_row(
+                "SELECT value FROM schema_metadata WHERE key = 'schema_version'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+
+        if current_version >= 1 {
+            return Ok(());
+        }
+
+        let tx = conn.transaction().map_err(|e| e.to_string())?;
+
+        // Check if user_settings exists in app_settings
+        let existing_payload: Option<String> = {
+            let mut stmt = tx
+                .prepare("SELECT value FROM app_settings WHERE key = 'user_settings'")
+                .map_err(|e| e.to_string())?;
+            let mut rows = stmt.query([]).map_err(|e| e.to_string())?;
+            if let Some(row) = rows.next().map_err(|e| e.to_string())? {
+                Some(row.get(0).map_err(|e| e.to_string())?)
+            } else {
+                None
+            }
+        };
+
+        if let Some(raw_json) = existing_payload {
+            // Record audit row in settings_migrations
+            tx.execute(
+                "INSERT INTO settings_migrations (schema_version, schema_version_from, schema_version_to, prior_json_payload, applied_at, acknowledged_at)
+                 VALUES (?1, ?2, ?3, ?4, datetime('now'), NULL)",
+                params![1, 0, 1, raw_json],
+            ).map_err(|e| e.to_string())?;
+
+            // Parse and migrate JSON
+            if let Ok(mut val) = serde_json::from_str::<serde_json::Value>(&raw_json) {
+                if let Some(obj) = val.as_object_mut() {
+                    obj.insert("provider".to_string(), serde_json::Value::String("local".to_string()));
+
+                    // Model migration: replace vision model with llama3.2:3b, but leave unrecognised non-vision models untouched
+                    if let Some(model_val) = obj.get("ollamaModel").and_then(|v| v.as_str()) {
+                        let lower = model_val.to_lowercase();
+                        if lower.contains("qwen2.5vl") || lower.contains("vision") || lower.contains("-vl") || lower.contains(":vl") || lower.contains("vl:") {
+                            obj.insert("ollamaModel".to_string(), serde_json::Value::String("llama3.2:3b".to_string()));
+                        }
+                    } else {
+                        obj.insert("ollamaModel".to_string(), serde_json::Value::String("llama3.2:3b".to_string()));
+                    }
+
+                    // Remove legacy keys
+                    obj.remove("autoCheckPassive");
+                    obj.remove("maxSentenceLengthThreshold");
+
+                    // Ensure language is en_GB if absent
+                    if !obj.contains_key("language") {
+                        obj.insert("language".to_string(), serde_json::Value::String("en_GB".to_string()));
+                    }
+
+                    let updated_json = serde_json::to_string(&val).map_err(|e| e.to_string())?;
+                    tx.execute(
+                        "UPDATE app_settings SET value = ?1 WHERE key = 'user_settings'",
+                        params![updated_json],
+                    ).map_err(|e| e.to_string())?;
+                }
+            }
+        }
+
+        // Update schema_metadata
+        tx.execute(
+            "INSERT INTO schema_metadata (key, value) VALUES ('schema_version', 1)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            [],
+        ).map_err(|e| e.to_string())?;
+
+        tx.commit().map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    pub fn get_unacknowledged_migration(&self) -> Result<Option<SettingsMigration>, String> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn
+            .prepare(
+                "SELECT schema_version, schema_version_from, schema_version_to, prior_json_payload, applied_at, acknowledged_at
+                 FROM settings_migrations
+                 WHERE acknowledged_at IS NULL
+                 ORDER BY schema_version DESC
+                 LIMIT 1"
+            )
+            .map_err(|e| e.to_string())?;
+
+        let mut rows = stmt.query([]).map_err(|e| e.to_string())?;
+        if let Some(row) = rows.next().map_err(|e| e.to_string())? {
+            Ok(Some(SettingsMigration {
+                schema_version: row.get(0).map_err(|e| e.to_string())?,
+                schema_version_from: row.get(1).map_err(|e| e.to_string())?,
+                schema_version_to: row.get(2).map_err(|e| e.to_string())?,
+                prior_json_payload: row.get(3).map_err(|e| e.to_string())?,
+                applied_at: row.get(4).map_err(|e| e.to_string())?,
+                acknowledged_at: row.get(5).map_err(|e| e.to_string())?,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn acknowledge_migration(&self, schema_version: i64) -> Result<(), String> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "UPDATE settings_migrations SET acknowledged_at = datetime('now') WHERE schema_version = ?1",
+            params![schema_version],
+        ).map_err(|e| e.to_string())?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -333,5 +478,162 @@ mod tests {
         db.set_setting("theme", "dark").expect("Set setting failed");
         let val = db.get_setting("theme").expect("Get setting failed");
         assert_eq!(val, Some("dark".to_string()));
+    }
+
+    #[test]
+    fn test_migration_idempotence_and_audit() {
+        let conn = Connection::open_in_memory().unwrap();
+        let mgr = DatabaseManager { conn: Mutex::new(conn) };
+        mgr.init_tables().unwrap();
+
+        let old_payload = r#"{"provider":"ollama","ollamaBaseUrl":"http://localhost:11434/v1","ollamaModel":"qwen2.5vl:latest","autoCheckPassive":true,"autoCheckTypography":true,"autoCheckRepetition":true,"maxSentenceLengthThreshold":25}"#;
+        mgr.set_setting("user_settings", old_payload).unwrap();
+
+        // First migration run
+        mgr.run_settings_migration().unwrap();
+
+        let unack = mgr.get_unacknowledged_migration().unwrap();
+        assert!(unack.is_some());
+        let audit = unack.unwrap();
+        assert_eq!(audit.schema_version, 1);
+        assert_eq!(audit.schema_version_from, 0);
+        assert_eq!(audit.schema_version_to, 1);
+        assert_eq!(audit.prior_json_payload, old_payload);
+        assert!(audit.acknowledged_at.is_none());
+
+        let migrated_str = mgr.get_setting("user_settings").unwrap().unwrap();
+        let migrated: serde_json::Value = serde_json::from_str(&migrated_str).unwrap();
+        assert_eq!(migrated["provider"], "local");
+        assert_eq!(migrated["ollamaModel"], "llama3.2:3b");
+        assert_eq!(migrated["language"], "en_GB");
+        assert!(migrated.get("autoCheckPassive").is_none());
+        assert!(migrated.get("maxSentenceLengthThreshold").is_none());
+        assert_eq!(migrated["autoCheckTypography"], true);
+        assert_eq!(migrated["autoCheckRepetition"], true);
+
+        // Run migration again (idempotency check)
+        mgr.run_settings_migration().unwrap();
+
+        // Audit row count should still be exactly 1
+        let conn = mgr.conn.lock().unwrap();
+        let count: i64 = conn.query_row("SELECT COUNT(*) FROM settings_migrations", [], |row| row.get(0)).unwrap();
+        assert_eq!(count, 1);
+    }
+
+    #[test]
+    fn test_migration_preserves_post_migration_changes() {
+        let conn = Connection::open_in_memory().unwrap();
+        let mgr = DatabaseManager { conn: Mutex::new(conn) };
+        mgr.init_tables().unwrap();
+
+        let old_payload = r#"{"provider":"ollama","ollamaModel":"qwen2.5vl:latest"}"#;
+        mgr.set_setting("user_settings", old_payload).unwrap();
+        mgr.run_settings_migration().unwrap();
+
+        // User changes provider back to ollama post-migration
+        let updated_user_payload = r#"{"provider":"ollama","ollamaModel":"llama3.2:3b","theme":"light"}"#;
+        mgr.set_setting("user_settings", updated_user_payload).unwrap();
+
+        // Running migration again must NOT overwrite the user's post-migration setting
+        mgr.run_settings_migration().unwrap();
+        let stored = mgr.get_setting("user_settings").unwrap().unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&stored).unwrap();
+        assert_eq!(parsed["provider"], "ollama");
+        assert_eq!(parsed["theme"], "light");
+    }
+
+    #[test]
+    fn test_migration_unrecognised_model_untouched() {
+        let conn = Connection::open_in_memory().unwrap();
+        let mgr = DatabaseManager { conn: Mutex::new(conn) };
+        mgr.init_tables().unwrap();
+
+        let old_payload = r#"{"provider":"ollama","ollamaModel":"mistral:7b-instruct"}"#;
+        mgr.set_setting("user_settings", old_payload).unwrap();
+        mgr.run_settings_migration().unwrap();
+
+        let stored = mgr.get_setting("user_settings").unwrap().unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&stored).unwrap();
+        assert_eq!(parsed["provider"], "local");
+        // Non-vision unrecognised model is left untouched
+        assert_eq!(parsed["ollamaModel"], "mistral:7b-instruct");
+    }
+
+    #[test]
+    fn test_migration_interrupted_rollback() {
+        let conn = Connection::open_in_memory().unwrap();
+        let mgr = DatabaseManager { conn: Mutex::new(conn) };
+        mgr.init_tables().unwrap();
+
+        let old_payload = r#"{"provider":"ollama","ollamaModel":"qwen2.5vl:latest"}"#;
+        mgr.set_setting("user_settings", old_payload).unwrap();
+
+        // Manually simulate a failure inside transaction:
+        // Attempt to insert duplicate schema_version in settings_migrations to force unique constraint error
+        {
+            let mut conn_guard = mgr.conn.lock().unwrap();
+            let tx = conn_guard.transaction().unwrap();
+            tx.execute(
+                "INSERT INTO settings_migrations (schema_version, schema_version_from, schema_version_to, prior_json_payload, applied_at)
+                 VALUES (1, 0, 1, 'dummy', datetime('now'))",
+                [],
+            ).unwrap();
+            tx.commit().unwrap();
+        }
+
+        // Now run_settings_migration should fail due to unique constraint on schema_version=1
+        let result = mgr.run_settings_migration();
+        assert!(result.is_err(), "Migration must error when unique constraint violated");
+
+        // Verify schema_version in schema_metadata was NOT set to 1
+        let conn_guard = mgr.conn.lock().unwrap();
+        let ver: i64 = conn_guard.query_row(
+            "SELECT value FROM schema_metadata WHERE key = 'schema_version'",
+            [],
+            |r| r.get(0),
+        ).unwrap_or(0);
+        assert_eq!(ver, 0, "Schema version must remain 0 after rollback");
+
+        // Old settings row must remain unmutated
+        drop(conn_guard);
+        let stored = mgr.get_setting("user_settings").unwrap().unwrap();
+        assert_eq!(stored, old_payload);
+    }
+
+    #[test]
+    fn test_migration_acknowledgement() {
+        let conn = Connection::open_in_memory().unwrap();
+        let mgr = DatabaseManager { conn: Mutex::new(conn) };
+        mgr.init_tables().unwrap();
+
+        let old_payload = r#"{"provider":"ollama","ollamaModel":"qwen2.5vl:latest"}"#;
+        mgr.set_setting("user_settings", old_payload).unwrap();
+        mgr.run_settings_migration().unwrap();
+
+        let unack = mgr.get_unacknowledged_migration().unwrap();
+        assert!(unack.is_some());
+        assert_eq!(unack.unwrap().schema_version, 1);
+
+        mgr.acknowledge_migration(1).unwrap();
+
+        let after_ack = mgr.get_unacknowledged_migration().unwrap();
+        assert!(after_ack.is_none());
+    }
+
+    #[test]
+    fn test_live_db_migration() {
+        let mgr = DatabaseManager::new().expect("Failed to initialize DatabaseManager on live database");
+        let version: i64 = {
+            let conn = mgr.conn.lock().unwrap();
+            conn.query_row(
+                "SELECT value FROM schema_metadata WHERE key = 'schema_version'",
+                [],
+                |row| row.get(0),
+            ).expect("schema_version query failed")
+        };
+        assert_eq!(version, 1);
+
+        let unack = mgr.get_unacknowledged_migration().expect("Failed to query unacknowledged migration");
+        assert!(unack.is_some(), "Expected unacknowledged migration audit row to be present");
     }
 }

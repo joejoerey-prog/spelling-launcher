@@ -1,10 +1,11 @@
-import { DocumentModel, DocumentStats, SentenceNode } from '../../types/document';
-import { DeterministicIssue, RewriteOption, RewriteTone, RewriteLength, RewriteGoal } from '../../types/suggestions';
+import { DocumentModel, DocumentStats, SentenceNode, ParagraphNode } from '../../types/document';
+import { DeterministicIssue, IssueCategory, RewriteOption, RewriteTone, RewriteLength, RewriteGoal } from '../../types/suggestions';
 import { parseDocument, reassembleDocument, calculateDocumentStats } from '../engine/segmenter';
-import { analyzeSentenceIssues } from '../engine/deterministicRules';
 import { rewriteSelectedPassage } from '../engine/aiRewriter';
 import { rulesStore } from './rulesStore';
 import { settingsStore } from './settingsStore';
+import { styleStore } from './styleStore';
+import { TauriBridge } from '../bridge/tauriBridge';
 
 export interface HistoryEntry {
   rawContent: string;
@@ -100,36 +101,214 @@ class EditorStore {
     return null;
   }
 
-  refreshAllIssues(): void {
-    const allIssues = new Map<string, DeterministicIssue[]>();
-    const rules = rulesStore.state.rules;
-    const ignored = rulesStore.state.ignoredTerms;
-    const settings = settingsStore.state;
+  private checkDebounceTimer: any = null;
 
-    for (const p of this.state.document.paragraphs) {
-      if (p.isCodeBlock || p.isBlank) continue;
-      for (const s of p.sentences) {
-        const issues = analyzeSentenceIssues(s, {
-          ignoredTerms: ignored,
-          userRules: rules,
-          maxSentenceLength: settings.maxSentenceLengthThreshold,
-          checkPassive: settings.autoCheckPassive,
-          checkTypography: settings.autoCheckTypography,
-          checkRepetition: settings.autoCheckRepetition,
-        });
-        if (issues.length > 0) {
-          allIssues.set(s.id, issues);
+  private mapNativeIssuesToDocument(nativeIssues: any[]): void {
+    const allIssues = new Map<string, DeterministicIssue[]>();
+    const doc = this.state.document;
+
+    for (const issue of nativeIssues) {
+      if (styleStore.isRuleSuppressed(issue.rule_id)) continue;
+      if (!settingsStore.state.autoCheckTypography && (issue.category === 'punctuation' || issue.category === 'capitalisation')) continue;
+      if (!settingsStore.state.autoCheckRepetition && issue.category === 'repetition') continue;
+      let matchedSentence: SentenceNode | null = null;
+      let sentenceDocStart = 0;
+
+      for (const p of doc.paragraphs) {
+        if (p.isCodeBlock || p.isBlank) continue;
+        const pStart = p.startOffset ?? 0;
+        const pEnd = p.endOffset ?? 0;
+        if (issue.start_offset < pStart || issue.start_offset > pEnd) continue;
+
+        for (const s of p.sentences) {
+          const sStart = s.documentStartOffset ?? (pStart + s.startOffset);
+          const sEnd = s.documentEndOffset ?? (pStart + s.endOffset);
+          if (issue.start_offset >= sStart && issue.start_offset <= sEnd) {
+            matchedSentence = s;
+            sentenceDocStart = sStart;
+            break;
+          }
+        }
+        if (matchedSentence) break;
+      }
+
+      if (!matchedSentence) {
+        for (const p of doc.paragraphs) {
+          if (p.isCodeBlock || p.isBlank) continue;
+          const pStart = p.startOffset ?? 0;
+          for (const s of p.sentences) {
+            const sStart = s.documentStartOffset ?? (pStart + s.startOffset);
+            const sEnd = s.documentEndOffset ?? (pStart + s.endOffset);
+            if (issue.start_offset < sEnd && issue.end_offset > sStart) {
+              matchedSentence = s;
+              sentenceDocStart = sStart;
+              break;
+            }
+          }
+          if (matchedSentence) break;
         }
       }
+
+      if (!matchedSentence) continue;
+
+      const categoryMap: Record<string, IssueCategory> = {
+        spelling: 'spelling',
+        grammar: 'grammar',
+        style: 'wordiness',
+        punctuation: 'punctuation',
+        repetition: 'repetition',
+        capitalisation: 'typography',
+      };
+      const cat = categoryMap[issue.category] || 'grammar';
+
+      const relStart = Math.max(0, issue.start_offset - sentenceDocStart);
+      const relEnd = Math.min(matchedSentence.text.length, issue.end_offset - sentenceDocStart);
+      const replacementStr = issue.replacement ?? (issue.suggestions && issue.suggestions.length > 0 ? issue.suggestions[0] : undefined);
+
+      let fullSuggestedText: string | undefined;
+      if (replacementStr !== undefined) {
+        if (matchedSentence.trimmedText.includes(issue.matched_text)) {
+          fullSuggestedText = matchedSentence.trimmedText.replace(issue.matched_text, replacementStr);
+        } else {
+          fullSuggestedText = matchedSentence.trimmedText;
+        }
+      }
+
+      const detIssue: DeterministicIssue = {
+        id: issue.id || `${matchedSentence.id}-${issue.rule_id}-${issue.start_offset}`,
+        sentenceId: matchedSentence.id,
+        category: cat,
+        title: issue.message || `Issue: ${issue.rule_id}`,
+        description: `Rule: ${issue.rule_id}. Matched "${issue.matched_text}".` + (issue.suggestions && issue.suggestions.length > 0 ? ` Suggestions: ${issue.suggestions.join(', ')}` : ''),
+        severity: issue.severity === 'error' ? 'warning' : 'suggestion',
+        originalText: matchedSentence.trimmedText,
+        suggestedText: fullSuggestedText,
+        matchStart: relStart,
+        matchEnd: relEnd,
+        applyAllEligible: Boolean(issue.apply_all_eligible),
+        ruleId: issue.rule_id,
+        rawStartOffset: issue.start_offset,
+        rawEndOffset: issue.end_offset,
+        replacement: replacementStr,
+        suggestions: issue.suggestions || (replacementStr ? [replacementStr] : []),
+      };
+
+      const existing = allIssues.get(matchedSentence.id) || [];
+      existing.push(detIssue);
+      allIssues.set(matchedSentence.id, existing);
     }
 
     this.state.allDocumentIssues = allIssues;
-
     if (this.state.selectedSentenceId) {
       this.state.activeSentenceIssues = allIssues.get(this.state.selectedSentenceId) || [];
     }
+  }
 
-    this.notify();
+  private updateParagraphIssues(p: ParagraphNode, nativeIssues: any[]): void {
+    const allIssues = new Map(this.state.allDocumentIssues);
+    for (const s of p.sentences) {
+      allIssues.delete(s.id);
+    }
+
+    for (const issue of nativeIssues) {
+      if (styleStore.isRuleSuppressed(issue.rule_id)) continue;
+      if (!settingsStore.state.autoCheckTypography && (issue.category === 'punctuation' || issue.category === 'capitalisation')) continue;
+      if (!settingsStore.state.autoCheckRepetition && issue.category === 'repetition') continue;
+      let matchedSentence: SentenceNode | null = null;
+      let sentenceDocStart = 0;
+
+      for (const s of p.sentences) {
+        const sStart = s.documentStartOffset ?? ((p.startOffset || 0) + s.startOffset);
+        const sEnd = s.documentEndOffset ?? ((p.startOffset || 0) + s.endOffset);
+        if (issue.start_offset >= sStart && issue.start_offset <= sEnd) {
+          matchedSentence = s;
+          sentenceDocStart = sStart;
+          break;
+        }
+      }
+
+      if (!matchedSentence) continue;
+
+      const categoryMap: Record<string, IssueCategory> = {
+        spelling: 'spelling',
+        grammar: 'grammar',
+        style: 'wordiness',
+        punctuation: 'punctuation',
+        repetition: 'repetition',
+        capitalisation: 'typography',
+      };
+      const cat = categoryMap[issue.category] || 'grammar';
+      const relStart = Math.max(0, issue.start_offset - sentenceDocStart);
+      const relEnd = Math.min(matchedSentence.text.length, issue.end_offset - sentenceDocStart);
+      const replacementStr = issue.replacement ?? (issue.suggestions && issue.suggestions.length > 0 ? issue.suggestions[0] : undefined);
+
+      let fullSuggestedText: string | undefined;
+      if (replacementStr !== undefined) {
+        if (matchedSentence.trimmedText.includes(issue.matched_text)) {
+          fullSuggestedText = matchedSentence.trimmedText.replace(issue.matched_text, replacementStr);
+        } else {
+          fullSuggestedText = matchedSentence.trimmedText;
+        }
+      }
+
+      const detIssue: DeterministicIssue = {
+        id: issue.id || `${matchedSentence.id}-${issue.rule_id}-${issue.start_offset}`,
+        sentenceId: matchedSentence.id,
+        category: cat,
+        title: issue.message || `Issue: ${issue.rule_id}`,
+        description: `Rule: ${issue.rule_id}. Matched "${issue.matched_text}".` + (issue.suggestions && issue.suggestions.length > 0 ? ` Suggestions: ${issue.suggestions.join(', ')}` : ''),
+        severity: issue.severity === 'error' ? 'warning' : 'suggestion',
+        originalText: matchedSentence.trimmedText,
+        suggestedText: fullSuggestedText,
+        matchStart: relStart,
+        matchEnd: relEnd,
+        applyAllEligible: Boolean(issue.apply_all_eligible),
+        ruleId: issue.rule_id,
+        rawStartOffset: issue.start_offset,
+        rawEndOffset: issue.end_offset,
+        replacement: replacementStr,
+        suggestions: issue.suggestions || (replacementStr ? [replacementStr] : []),
+      };
+
+      const existing = allIssues.get(matchedSentence.id) || [];
+      existing.push(detIssue);
+      allIssues.set(matchedSentence.id, existing);
+    }
+
+    this.state.allDocumentIssues = allIssues;
+    if (this.state.selectedSentenceId) {
+      this.state.activeSentenceIssues = allIssues.get(this.state.selectedSentenceId) || [];
+    }
+  }
+
+  async refreshAllIssues(options?: { dirtyParagraphIndex?: number }): Promise<void> {
+    try {
+      const lang = settingsStore.state.language || 'en_GB';
+      const doc = this.state.document;
+
+      if (options?.dirtyParagraphIndex !== undefined) {
+        const p = doc.paragraphs[options.dirtyParagraphIndex];
+        if (p && !p.isCodeBlock && !p.isBlank) {
+          const issues = await TauriBridge.checkParagraph(p.rawText, p.startOffset || 0, lang);
+          this.updateParagraphIssues(p, issues);
+          this.notify();
+
+          if (this.checkDebounceTimer) clearTimeout(this.checkDebounceTimer);
+          this.checkDebounceTimer = setTimeout(() => {
+            this.refreshAllIssues();
+          }, 300);
+          return;
+        }
+      }
+
+      const issues = await TauriBridge.checkDocument(doc.rawContent, lang);
+      this.mapNativeIssuesToDocument(issues);
+      this.notify();
+    } catch (err: any) {
+      console.warn('Native checking notice/error:', err);
+      this.state.error = `Native text check notice: ${err?.message || err}`;
+      this.notify();
+    }
   }
 
   loadDocument(rawContent: string, filePath: string | null = null, fileName: string = 'Document.md'): void {
@@ -156,7 +335,7 @@ class EditorStore {
     this.refreshAllIssues();
   }
 
-  updateRawContentDirectly(rawContent: string): void {
+  updateRawContentDirectly(rawContent: string, dirtyParagraphIndex?: number): void {
     const doc = parseDocument(rawContent, this.state.document.filePath, this.state.document.fileName);
     doc.isDirty = true;
     const stats = calculateDocumentStats(rawContent, doc.paragraphs);
@@ -165,10 +344,18 @@ class EditorStore {
     this.state.stats = stats;
 
     this.pushHistory(rawContent, 'Manual Edit');
-    this.refreshAllIssues();
+
+    if (dirtyParagraphIndex !== undefined) {
+      this.refreshAllIssues({ dirtyParagraphIndex });
+    } else {
+      if (this.checkDebounceTimer) clearTimeout(this.checkDebounceTimer);
+      this.checkDebounceTimer = setTimeout(() => {
+        this.refreshAllIssues();
+      }, 300);
+    }
   }
 
-  async selectSentence(sentenceId: string | null): Promise<void> {
+  selectSentence(sentenceId: string | null): void {
     this.state.selectedSentenceId = sentenceId;
     this.state.error = null;
 
@@ -187,7 +374,8 @@ class EditorStore {
     }
 
     this.state.activeSentenceIssues = this.state.allDocumentIssues.get(sentenceId) || [];
-    await this.generateRewritesForSelected();
+    // Rewriting is decoupled from selection (Amendment 3). Only triggers explicitly.
+    this.notify();
   }
 
   async setToneAndLength(tone: RewriteTone, length: RewriteLength, goal: RewriteGoal = 'clarity'): Promise<void> {
@@ -264,13 +452,90 @@ class EditorStore {
 
     this.pushHistory(reassembled, description);
     this.refreshAllIssues();
-
-    this.generateRewritesForSelected();
   }
 
-  applyIssueFix(issue: DeterministicIssue): void {
-    if (!issue.suggestedText) return;
-    this.applySentenceRevision(issue.sentenceId, issue.suggestedText, `Applied: ${issue.title}`);
+  applyIssueFix(issue: DeterministicIssue, specificReplacement?: string): void {
+    if (specificReplacement && issue.originalText && issue.matchStart !== undefined && issue.matchEnd !== undefined) {
+      const newSentenceText =
+        issue.originalText.slice(0, issue.matchStart) +
+        specificReplacement +
+        issue.originalText.slice(issue.matchEnd);
+      this.applySentenceRevision(issue.sentenceId, newSentenceText, `Applied: ${specificReplacement}`);
+    } else if (issue.suggestedText) {
+      this.applySentenceRevision(issue.sentenceId, issue.suggestedText, `Applied: ${issue.title}`);
+    } else if (issue.rawStartOffset !== undefined && issue.rawEndOffset !== undefined && issue.replacement !== undefined) {
+      const raw = this.state.document.rawContent;
+      const rep = specificReplacement || issue.replacement;
+      const updated = raw.slice(0, issue.rawStartOffset) + rep + raw.slice(issue.rawEndOffset);
+      this.updateRawContentDirectly(updated);
+    }
+  }
+
+  async applyAllSafeFixes(customIssues?: DeterministicIssue[]): Promise<void> {
+    let eligible = customIssues;
+    if (!eligible) {
+      eligible = [];
+      for (const issues of this.state.allDocumentIssues.values()) {
+        for (const issue of issues) {
+          if (issue.applyAllEligible && (issue.replacement !== undefined || issue.suggestedText !== undefined)) {
+            eligible.push(issue);
+          }
+        }
+      }
+    }
+
+    if (eligible.length === 0) return;
+
+    let content = this.state.document.rawContent;
+
+    const sorted = [...eligible]
+      .filter((i) => i.rawStartOffset !== undefined && i.rawEndOffset !== undefined && i.replacement !== undefined)
+      .sort((a, b) => (b.rawStartOffset || 0) - (a.rawStartOffset || 0));
+
+    if (sorted.length > 0) {
+      for (const issue of sorted) {
+        const start = issue.rawStartOffset!;
+        const end = issue.rawEndOffset!;
+        const repl = issue.replacement!;
+        content = content.slice(0, start) + repl + content.slice(end);
+      }
+    } else {
+      for (const issue of eligible) {
+        if (issue.suggestedText) {
+          for (const p of this.state.document.paragraphs) {
+            for (const s of p.sentences) {
+              if (s.id === issue.sentenceId) {
+                s.text = issue.suggestedText;
+                s.trimmedText = issue.suggestedText.trim();
+              }
+            }
+          }
+        }
+      }
+      content = reassembleDocument(this.state.document);
+    }
+
+    const doc = parseDocument(content, this.state.document.filePath, this.state.document.fileName);
+    doc.isDirty = true;
+    this.state.document = doc;
+    this.state.stats = calculateDocumentStats(content, doc.paragraphs);
+
+    const desc = `Applied All (${eligible.length}) Fixes`;
+    this.pushHistory(content, desc);
+    this.state.successMessage = `Successfully applied ${eligible.length} fixes`;
+    await this.refreshAllIssues();
+  }
+
+  async ignoreWord(word: string): Promise<void> {
+    try {
+      await TauriBridge.ignoreWord(word);
+      await rulesStore.addIgnoredTerm(word);
+      this.state.successMessage = `Ignored word "${word}"`;
+      await this.refreshAllIssues();
+    } catch (e: any) {
+      this.state.error = `Could not ignore word: ${e?.message || e}`;
+      this.notify();
+    }
   }
 
   pushHistory(rawContent: string, description: string): void {
@@ -298,9 +563,6 @@ class EditorStore {
     this.state.successMessage = `Undo: ${entry.description}`;
 
     this.refreshAllIssues();
-    if (this.state.selectedSentenceId) {
-      this.generateRewritesForSelected();
-    }
   }
 
   redo(): void {
@@ -315,9 +577,31 @@ class EditorStore {
     this.state.successMessage = `Redo: ${entry.description}`;
 
     this.refreshAllIssues();
-    if (this.state.selectedSentenceId) {
-      this.generateRewritesForSelected();
+  }
+
+  async learnWord(word: string): Promise<void> {
+    await TauriBridge.learnWord(word);
+    await styleStore.addLearnedWord(word);
+    this.state.successMessage = `Learned "${word}" in macOS system dictionary`;
+    this.refreshAllIssues();
+  }
+
+  async ignoreIssue(issue: DeterministicIssue): Promise<void> {
+    const key = issue.ruleId || issue.category;
+    const newlySuppressed = await styleStore.recordRejection(key);
+    if (newlySuppressed) {
+      this.state.successMessage = `Rule "${key}" suppressed based on writing style feedback (3 rejections)`;
+    } else {
+      const count = styleStore.state.ruleRejections[key] || 1;
+      this.state.successMessage = `Ignored issue (${count}/3 before auto-suppression)`;
     }
+    this.state.activeSentenceIssues = this.state.activeSentenceIssues.filter((i) => i.id !== issue.id);
+    const existing = this.state.allDocumentIssues.get(issue.sentenceId) || [];
+    this.state.allDocumentIssues.set(
+      issue.sentenceId,
+      existing.filter((i) => i.id !== issue.id)
+    );
+    this.notify();
   }
 
   clearMessages(): void {
