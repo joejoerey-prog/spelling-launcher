@@ -37,7 +37,7 @@ Before proposing changes, please be mindful of our non-negotiable architectural 
 
 ### Initial Repository Setup
 ```bash
-git clone https://github.com/<owner>/spelling-launcher.git
+git clone https://github.com/joejoerey-prog/spelling-launcher.git
 cd spelling-launcher
 npm install
 ```

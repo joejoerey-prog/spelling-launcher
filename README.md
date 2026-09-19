@@ -1,6 +1,6 @@
 # 🚀 Spelling Launcher Desktop
 
-[![CI](https://github.com/joerey/spelling-launcher/actions/workflows/ci.yml/badge.svg)](https://github.com/joerey/spelling-launcher/actions/workflows/ci.yml)
+[![CI](https://github.com/joejoerey-prog/spelling-launcher/actions/workflows/ci.yml/badge.svg)](https://github.com/joejoerey-prog/spelling-launcher/actions/workflows/ci.yml)
 [![Licence: MIT](https://img.shields.io/badge/Licence-MIT-blue.svg)](LICENSE)
 [![Platform: macOS Apple Silicon](https://img.shields.io/badge/Platform-macOS%20(Apple%20Silicon)-black.svg)](https://apple.com)
 
@@ -95,7 +95,7 @@ Spelling Launcher enforces **Strategy H**: a single, authoritative Rust core (`c
 ## 📦 Installation
 
 ### Option 1: Download Release (Recommended for Users)
-1. Navigate to the [GitHub Releases](https://github.com/joerey/spelling-launcher/releases) page.
+1. Navigate to the [GitHub Releases](https://github.com/joejoerey-prog/spelling-launcher/releases) page.
 2. Download the latest `Spelling-Launcher_<version>_aarch64.dmg`.
 3. Open the `.dmg` and drag **Spelling Launcher.app** into your `/Applications` folder.
 
@@ -109,7 +109,7 @@ Spelling Launcher enforces **Strategy H**: a single, authoritative Rust core (`c
 #### Build Steps
 ```bash
 # 1. Clone repository
-git clone https://github.com/joerey/spelling-launcher.git
+git clone https://github.com/joejoerey-prog/spelling-launcher.git
 cd spelling-launcher
 
 # 2. Install dependencies
