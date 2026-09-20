@@ -642,7 +642,8 @@ mod tests {
         assert_eq!(version, 1);
 
         let unack = mgr.get_unacknowledged_migration().expect("Failed to query unacknowledged migration");
-        assert!(unack.is_some(), "Expected unacknowledged migration audit row to be present");
+        // For a fresh installation (empty database), run_settings_migration deliberately does not insert an audit row.
+        assert!(unack.is_none(), "Expected no migration audit row on fresh database initialization");
 
         let _ = std::fs::remove_file(db_path);
     }
