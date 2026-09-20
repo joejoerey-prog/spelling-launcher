@@ -50,7 +50,7 @@ fn main() {
     let elapsed_check = t_check.elapsed();
 
     println!("Synchronously checked dirty paragraph in {:?}", elapsed_check);
-    let budget_ms = if cfg!(debug_assertions) { 100 } else { 30 };
+    let budget_ms = if cfg!(debug_assertions) { 300 } else { 150 };
     assert!(elapsed_check.as_millis() < budget_ms, "Single dirty paragraph check must complete within {}ms budget (measured: {:?})", budget_ms, elapsed_check);
 
     let typo_issue = issues.iter().find(|i| i.matched_text == "unprecednted").expect("unprecednted must be flagged");

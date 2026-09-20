@@ -93,59 +93,59 @@ pub fn extract_native_document(file_path: &str) -> Result<String, String> {
     }
 
     // Fallback on macOS: execute swift directly with PDFKit/mdimport
-    let swift_script = format!(
-        r#"
+    let swift_script = r#"
 import Foundation
 import PDFKit
 
-let path = "{}"
+guard let path = ProcessInfo.processInfo.environment["DOC_EXTRACT_PATH"] else {
+    exit(1)
+}
 let url = URL(fileURLWithPath: path)
 let ext = url.pathExtension.lowercased()
 
-if ext == "pdf" {{
-    if let doc = PDFDocument(url: url) {{
+if ext == "pdf" {
+    if let doc = PDFDocument(url: url) {
         var pages: [String] = []
-        for i in 0..<doc.pageCount {{
-            if let page = doc.page(at: i), let str = page.string {{
+        for i in 0..<doc.pageCount {
+            if let page = doc.page(at: i), let str = page.string {
                 let trimmed = str.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty {{ pages.append(trimmed) }}
-            }}
-        }}
+                if !trimmed.isEmpty { pages.append(trimmed) }
+            }
+        }
         print(pages.joined(separator: "\n\n"))
-    }}
-}} else if ext == "pages" {{
+    }
+} else if ext == "pages" {
     let task = Process()
     task.executableURL = URL(fileURLWithPath: "/usr/bin/mdimport")
     task.arguments = ["-t", "-d3", path]
     let pipe = Pipe()
     task.standardOutput = pipe
     task.standardError = pipe
-    if let _ = try? task.run() {{
+    if let _ = try? task.run() {
         task.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         if let output = String(data: data, encoding: .utf8),
-           let start = output.range(of: "kMDItemTextContent = \"") {{
+           let start = output.range(of: "kMDItemTextContent = \"") {
             let after = output[start.upperBound...]
-            if let end = after.range(of: "\";\n") {{
+            if let end = after.range(of: "\";\n") {
                 var raw = String(after[..<end.lowerBound])
                 raw = raw.replacingOccurrences(of: "\\\"", with: "\"")
                 let lines = raw.components(separatedBy: "\\n")
-                let filtered = lines.filter {{ line in
+                let filtered = lines.filter { line in
                     let l = line.trimmingCharacters(in: .whitespaces).lowercased()
                     return !l.hasSuffix(".jpg") && !l.hasSuffix(".png") && !l.hasSuffix(".pdf")
-                }}
+                }
                 print(filtered.joined(separator: "\n\n"))
-            }}
-        }}
-    }}
-}}
-"#,
-        file_path.replace('"', "\\\"")
-    );
+            }
+        }
+    }
+}
+"#;
 
     let output = Command::new("swift")
         .arg("-e")
-        .arg(&swift_script)
+        .arg(swift_script)
+        .env("DOC_EXTRACT_PATH", file_path)
         .output()
         .map_err(|e| format!("Swift execution error: {}", e))?;
 
