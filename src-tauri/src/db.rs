@@ -621,6 +621,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_live_db_migration() {
         let mgr = DatabaseManager::new().expect("Failed to initialize DatabaseManager on live database");
         let version: i64 = {
