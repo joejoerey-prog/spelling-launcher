@@ -19,7 +19,10 @@ impl DatabaseManager {
                 .map_err(|e| format!("Failed to create app data directory: {}", e))?;
         }
 
-        let db_path = app_dir.join("spelling_launcher.sqlite");
+        Self::new_with_path(app_dir.join("spelling_launcher.sqlite"))
+    }
+
+    pub fn new_with_path(db_path: PathBuf) -> Result<Self, String> {
         let conn = Connection::open(&db_path).map_err(|e| format!("Failed to open DB: {}", e))?;
         let mgr = DatabaseManager {
             conn: Mutex::new(conn),
@@ -622,7 +625,12 @@ mod tests {
 
     #[test]
     fn test_live_db_migration() {
-        let mgr = DatabaseManager::new().expect("Failed to initialize DatabaseManager on live database");
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let temp_dir = std::env::temp_dir();
+        let db_name = format!("test_live_db_{}.sqlite", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos());
+        let db_path = temp_dir.join(db_name);
+
+        let mgr = DatabaseManager::new_with_path(db_path.clone()).expect("Failed to initialize isolated DatabaseManager");
         let version: i64 = {
             let conn = mgr.conn.lock().unwrap();
             conn.query_row(
@@ -634,6 +642,9 @@ mod tests {
         assert_eq!(version, 1);
 
         let unack = mgr.get_unacknowledged_migration().expect("Failed to query unacknowledged migration");
-        assert!(unack.is_some(), "Expected unacknowledged migration audit row to be present");
+        // For a fresh installation (empty database), run_settings_migration deliberately does not insert an audit row.
+        assert!(unack.is_none(), "Expected no migration audit row on fresh database initialization");
+
+        let _ = std::fs::remove_file(db_path);
     }
 }
