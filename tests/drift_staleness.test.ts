@@ -65,8 +65,12 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
 
   it('fails with clear error if binary is missing', () => {
     try {
-      // Unset CI so check-drift doesn't exit 0 in CI environments when checking missing binary.
-      const env = { ...process.env, CLI_BIN_PATH: '/path/does/not/exist/spellcheck-cli' };
+      // Unset CI and provide a fake RAYCAST_DIR that exists so check-drift doesn't exit 0 in CI environments.
+      const env = {
+        ...process.env,
+        CLI_BIN_PATH: '/path/does/not/exist/spellcheck-cli',
+        RAYCAST_DIR: '/tmp'
+      };
       delete env.CI;
       execSync(`bash "${checkDriftScript}"`, {
         cwd: repoRoot,
@@ -76,6 +80,10 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
       });
       expect.fail('Expected check-drift.sh to fail when binary is missing');
     } catch (err: any) {
+      // Catch AssertionError from expect.fail if it didn't throw
+      if (err.name === 'AssertionError') {
+        throw err;
+      }
       expect(err.status).toBe(1);
       const output = (err.stdout?.toString() || '') + (err.stderr?.toString() || '');
       expect(output).toContain('Raycast staged binary not found');
