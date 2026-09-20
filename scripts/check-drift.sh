@@ -18,8 +18,8 @@ if [[ ! -f "${DEST_BIN}" ]]; then
   if [[ -n "${CI:-}" && ! -d "${RAYCAST_DIR}" ]]; then
     echo "Notice: Raycast extension directory not found at ${RAYCAST_DIR} in CI environment."
     echo "Running release CLI build and version self-check instead..."
-    cargo build --release --bin spellcheck-cli
-    ./target/release/spellcheck-cli --version
+    cargo build --release --bin spellcheck-cli --target aarch64-apple-darwin
+    env CC="clang" CXX="clang++" ./target/aarch64-apple-darwin/release/spellcheck-cli --version
     echo "=== Standalone CLI Check Passed ==="
     exit 0
   fi
