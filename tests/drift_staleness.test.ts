@@ -7,8 +7,9 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
   const repoRoot = path.resolve(__dirname, '..');
   const checkDriftScript = path.join(repoRoot, 'scripts', 'check-drift.sh');
   const raycastManifest = path.resolve(repoRoot, '../spelling-launcher-raycast/assets/spellcheck-cli.version.json');
+  const hasRaycastDir = fs.existsSync(raycastManifest);
 
-  it('passes cleanly when Raycast CLI and manifest match current spellcore HEAD', () => {
+  it.runIf(hasRaycastDir)('passes cleanly when Raycast CLI and manifest match current spellcore HEAD', () => {
     const output = execSync(`bash "${checkDriftScript}"`, {
       cwd: repoRoot,
       encoding: 'utf-8',
@@ -17,7 +18,7 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
     expect(output).toContain('No drift detected');
   });
 
-  it('deliberately staleness-checks when spellcore is ahead of staged binary and asserts check fails', () => {
+  it.runIf(hasRaycastDir)('deliberately staleness-checks when spellcore is ahead of staged binary and asserts check fails', () => {
     // Read the current valid manifest
     const validManifest = JSON.parse(fs.readFileSync(raycastManifest, 'utf-8'));
     
@@ -64,12 +65,12 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
 
   it('fails with clear error if binary is missing', () => {
     try {
+      // Unset CI so check-drift doesn't exit 0 in CI environments when checking missing binary.
+      const env = { ...process.env, CLI_BIN_PATH: '/path/does/not/exist/spellcheck-cli' };
+      delete env.CI;
       execSync(`bash "${checkDriftScript}"`, {
         cwd: repoRoot,
-        env: {
-          ...process.env,
-          CLI_BIN_PATH: '/path/does/not/exist/spellcheck-cli',
-        },
+        env,
         encoding: 'utf-8',
         stdio: 'pipe',
       });

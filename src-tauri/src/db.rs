@@ -622,6 +622,15 @@ mod tests {
 
     #[test]
     fn test_live_db_migration() {
+        // Clean up any existing live database file to ensure the test is isolated.
+        let app_dir = dirs::data_local_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("SpellingLauncher");
+        let db_path = app_dir.join("spelling_launcher.sqlite");
+        if db_path.exists() {
+            let _ = std::fs::remove_file(&db_path);
+        }
+
         let mgr = DatabaseManager::new().expect("Failed to initialize DatabaseManager on live database");
         let version: i64 = {
             let conn = mgr.conn.lock().unwrap();
