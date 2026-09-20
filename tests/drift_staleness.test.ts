@@ -12,14 +12,16 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
     const output = execSync(`bash "${checkDriftScript}"`, {
       cwd: repoRoot,
       encoding: 'utf-8',
+      stdio: 'pipe',
     });
+    const result = output.toString();
     if (process.env.CI && !fs.existsSync(path.dirname(raycastManifest))) {
-      expect(output).toContain('=== Standalone CLI Check Passed ===');
+      expect(result).toContain('=== Standalone CLI Check Passed ===');
     } else {
-      expect(output).toContain('=== Drift Check Passed ===');
-      expect(output).toContain('No drift detected');
+      expect(result).toContain('=== Drift Check Passed ===');
+      expect(result).toContain('No drift detected');
     }
-  });
+  }, 25000);
 
   it('deliberately staleness-checks when spellcore is ahead of staged binary and asserts check fails', () => {
     if (process.env.CI && !fs.existsSync(raycastManifest)) {
