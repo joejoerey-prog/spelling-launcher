@@ -622,7 +622,18 @@ mod tests {
 
     #[test]
     fn test_live_db_migration() {
-        let mgr = DatabaseManager::new().expect("Failed to initialize DatabaseManager on live database");
+        let mgr = DatabaseManager::new_in_memory().expect("Failed to initialize DatabaseManager on live database");
+
+        let old_payload = r#"{"provider":"ollama","ollamaModel":"qwen2.5vl:latest"}"#;
+        mgr.set_setting("user_settings", old_payload).unwrap();
+        // Since schema version is likely 1 after init, we manually revert it for the test
+        {
+            let conn = mgr.conn.lock().unwrap();
+            conn.execute("UPDATE schema_metadata SET value = 0 WHERE key = 'schema_version'", []).unwrap();
+        }
+
+        mgr.run_settings_migration().unwrap();
+
         let version: i64 = {
             let conn = mgr.conn.lock().unwrap();
             conn.query_row(

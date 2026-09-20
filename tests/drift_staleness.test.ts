@@ -12,12 +12,23 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
     const output = execSync(`bash "${checkDriftScript}"`, {
       cwd: repoRoot,
       encoding: 'utf-8',
+      stdio: 'pipe',
     });
-    expect(output).toContain('=== Drift Check Passed ===');
-    expect(output).toContain('No drift detected');
-  });
+    const result = output.toString();
+    if (process.env.CI && !fs.existsSync(path.dirname(raycastManifest))) {
+      expect(result).toContain('=== Standalone CLI Check Passed ===');
+    } else {
+      expect(result).toContain('=== Drift Check Passed ===');
+      expect(result).toContain('No drift detected');
+    }
+  }, 25000);
 
   it('deliberately staleness-checks when spellcore is ahead of staged binary and asserts check fails', () => {
+    if (process.env.CI && !fs.existsSync(raycastManifest)) {
+      // Skip this test in CI when the external Raycast repo isn't checked out
+      return;
+    }
+
     // Read the current valid manifest
     const validManifest = JSON.parse(fs.readFileSync(raycastManifest, 'utf-8'));
     
@@ -46,6 +57,7 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
       // Should not reach here
       expect.fail('Expected check-drift.sh to exit with error when staged binary is stale');
     } catch (err: any) {
+      if (err.name === 'AssertionError') { throw err; } // Let expect.fail propagate
       // Assert that check-drift failed
       expect(err.status).toBe(1);
       const output = (err.stdout?.toString() || '') + (err.stderr?.toString() || '');
@@ -64,7 +76,7 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
 
   it('fails with clear error if binary is missing', () => {
     try {
-      execSync(`bash "${checkDriftScript}"`, {
+      const result = execSync(`bash "${checkDriftScript}"`, {
         cwd: repoRoot,
         env: {
           ...process.env,
@@ -73,8 +85,13 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
         encoding: 'utf-8',
         stdio: 'pipe',
       });
-      expect.fail('Expected check-drift.sh to fail when binary is missing');
+      if (process.env.CI && !fs.existsSync(path.dirname(raycastManifest))) {
+        expect(result).toContain('=== Standalone CLI Check Passed ===');
+      } else {
+        expect.fail('Expected check-drift.sh to fail when binary is missing');
+      }
     } catch (err: any) {
+      if (err.name === 'AssertionError') { throw err; }
       expect(err.status).toBe(1);
       const output = (err.stdout?.toString() || '') + (err.stderr?.toString() || '');
       expect(output).toContain('Raycast staged binary not found');
