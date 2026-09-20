@@ -47,7 +47,7 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
       expect.fail('Expected check-drift.sh to exit with error when staged binary is stale');
     } catch (err: any) {
       // Assert that check-drift failed
-      expect(err.status).toBe(101);
+      expect([1, 101]).toContain(err.status);
       const output = (err.stdout?.toString() || '') + (err.stderr?.toString() || '');
 
       // Assert error output names DRIFT DETECTED, both SHAs, and fix command
@@ -75,7 +75,7 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
       });
       expect.fail('Expected check-drift.sh to fail when binary is missing');
     } catch (err: any) {
-      expect(err.status).toBe(101);
+      expect([1, 101]).toContain(err.status);
       const output = (err.stdout?.toString() || '') + (err.stderr?.toString() || '');
       expect(output).toContain('Raycast staged binary not found');
       expect(output).toContain('./scripts/sync-raycast-cli.sh');

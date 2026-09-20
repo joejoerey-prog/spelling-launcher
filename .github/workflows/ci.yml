@@ -20,7 +20,7 @@ jobs:
           targets: aarch64-apple-darwin
 
       - name: Run Cargo Workspace Tests
-        run: cargo test --workspace --target aarch64-apple-darwin
+        run: cargo test --workspace
 
   node-tests:
     name: Node Tests
