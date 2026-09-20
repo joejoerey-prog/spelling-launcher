@@ -64,9 +64,7 @@ pub fn extract_native_document(file_path: &str) -> Result<String, String> {
     }
 
     // Try compiled native doc_extractor binary first
-    let mut exe_candidates = vec![
-        PathBuf::from("/Users/joerey/.gemini/antigravity/scratch/wordtune-personal/src-tauri/bin/doc_extractor"),
-    ];
+    let mut exe_candidates = Vec::new();
 
     if let Ok(current_exe) = std::env::current_exe() {
         if let Some(parent) = current_exe.parent() {
