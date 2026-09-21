@@ -35,6 +35,13 @@ describe('Document Extractor', () => {
     expect(extracted).toContain('Second paragraph with important details.');
   });
 
+  it('handles corrupted or invalid Pages files gracefully', async () => {
+    const corruptedData = new Uint8Array([0, 1, 2, 3]).buffer;
+    const file = new File([corruptedData], 'corrupted.pages', { type: 'application/vnd.apple.pages' });
+
+    await expect(extractTextFromDocumentFile(file)).rejects.toThrow(/Failed to parse Apple Pages document/);
+  });
+
   it('formats letterhead addresses, dates, and salutations from multiline PDF output', () => {
     const rawPdf = `Joe Rey
 2
