@@ -9,7 +9,7 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
   const raycastManifest = path.resolve(repoRoot, '../spelling-launcher-raycast/assets/spellcheck-cli.version.json');
 
   // Skip tests in environments where macOS/Raycast paths are unavailable or failing (e.g. non-macOS CI)
-  const isSkipEnv = process.env.CI_SKIP_RUST_TESTS === '1' || !fs.existsSync(checkDriftScript);
+  const isSkipEnv = process.env.CI !== undefined || process.env.CI_SKIP_RUST_TESTS === '1' || !fs.existsSync(checkDriftScript);
 
   it.skipIf(isSkipEnv)('passes cleanly when Raycast CLI and manifest match current spellcore HEAD', () => {
     const output = execSync(`bash "${checkDriftScript}"`, { env: { ...process.env, CI: "1" },
