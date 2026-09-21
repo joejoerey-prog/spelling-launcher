@@ -4,6 +4,7 @@ use crate::native::NativeChecker;
 use crate::normalizer::normalize_issues;
 use crate::rules::DeterministicChecker;
 use crate::types::Issue;
+#[cfg(target_os = "macos")]
 use objc2_app_kit::NSSpellChecker;
 use std::sync::Arc;
 
@@ -48,14 +49,23 @@ impl SpellcoreEngine {
     }
 
     /// Allocate a unique document tag from NSSpellChecker.
+    #[cfg(target_os = "macos")]
     pub fn create_document_tag() -> isize {
         NSSpellChecker::uniqueSpellDocumentTag()
     }
+    #[cfg(not(target_os = "macos"))]
+    pub fn create_document_tag() -> isize {
+        0
+    }
 
     /// Close and release a document tag in NSSpellChecker.
+    #[cfg(target_os = "macos")]
     pub fn close_document_tag(tag: isize) {
         let checker = NSSpellChecker::sharedSpellChecker();
         checker.closeSpellDocumentWithTag(tag);
+    }
+    #[cfg(not(target_os = "macos"))]
+    pub fn close_document_tag(_tag: isize) {
     }
 
     /// Check text with all registered checkers and apply precedence normalization.

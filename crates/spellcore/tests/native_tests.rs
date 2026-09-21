@@ -79,6 +79,7 @@ fn test_document_mode_proper_nouns() {
     println!("  -> passed");
 }
 
+#[cfg(target_os = "macos")]
 fn test_native_dual_dict_oxford_ize() {
     println!("Running test_native_dual_dict_oxford_ize...");
     let checker = NativeChecker::new();
@@ -91,6 +92,7 @@ fn test_native_dual_dict_oxford_ize() {
     println!("  -> passed");
 }
 
+#[cfg(target_os = "macos")]
 fn test_timeout_and_fail_fast_guard_regression() {
     println!("Running test_timeout_and_fail_fast_guard_regression...");
     let start = Instant::now();
@@ -117,6 +119,7 @@ fn test_timeout_and_fail_fast_guard_regression() {
     println!("  -> passed");
 }
 
+#[cfg(target_os = "macos")]
 fn test_dialect_en_gb_and_en_us_spelling_acceptance() {
     println!("Running test_dialect_en_gb_and_en_us_spelling_acceptance...");
     let checker = NativeChecker::new();
@@ -140,6 +143,7 @@ fn test_dialect_en_gb_and_en_us_spelling_acceptance() {
     println!("  -> passed");
 }
 
+#[cfg(target_os = "macos")]
 fn test_engine_mixed_dialect_and_confusion() {
     println!("Running test_engine_mixed_dialect_and_confusion...");
     let engine = spellcore::SpellcoreEngine::new();
@@ -166,13 +170,16 @@ fn test_engine_mixed_dialect_and_confusion() {
 
 fn main() {
     println!("=== Running native AppKit test suite on Thread 0 ===");
-    test_fragment_mode_proper_noun_suppression();
-    test_fragment_initial_typo_still_fires();
-    test_clean_corpus_fragment_mode_under_threshold();
-    test_document_mode_proper_nouns();
-    test_native_dual_dict_oxford_ize();
-    test_dialect_en_gb_and_en_us_spelling_acceptance();
-    test_engine_mixed_dialect_and_confusion();
-    test_timeout_and_fail_fast_guard_regression();
+    #[cfg(target_os = "macos")]
+    {
+        test_fragment_mode_proper_noun_suppression();
+        test_fragment_initial_typo_still_fires();
+        test_clean_corpus_fragment_mode_under_threshold();
+        test_document_mode_proper_nouns();
+        test_native_dual_dict_oxford_ize();
+        test_dialect_en_gb_and_en_us_spelling_acceptance();
+        test_engine_mixed_dialect_and_confusion();
+        test_timeout_and_fail_fast_guard_regression();
+    }
     println!("=== All native tests passed on Thread 0 ===");
 }

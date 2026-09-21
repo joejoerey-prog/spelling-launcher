@@ -61,7 +61,7 @@ fi
 
 CURRENT_SPELLCORE_SHA="${CURRENT_SPELLCORE_SHA:-unknown}"
 VERSION="$(grep '^version' "${REPO_ROOT}/crates/spellcheck-cli/Cargo.toml" | head -n 1 | cut -d '"' -f 2)"
-TARGET="aarch64-apple-darwin"
+TARGET="${TARGET:-aarch64-apple-darwin}"
 BUILD_PROFILE="release"
 
 # 2. Extract staged binary version and manifest metadata

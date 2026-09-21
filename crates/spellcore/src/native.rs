@@ -1,13 +1,18 @@
 use crate::checker::{Checker, CheckerError};
 use crate::types::{utf16_range_to_utf8_offsets, Category, CheckMode, Issue, Severity};
+#[cfg(target_os = "macos")]
 use objc2::msg_send;
+#[cfg(target_os = "macos")]
 use objc2::runtime::AnyObject;
+#[cfg(target_os = "macos")]
 use objc2_app_kit::NSSpellChecker;
+#[cfg(target_os = "macos")]
 use objc2_foundation::{
     ns_string, NSArray, NSRange, NSString, NSTextCheckingType,
 };
 use std::collections::{BTreeMap, HashSet};
 
+#[cfg(target_os = "macos")]
 extern "C" {
     fn pthread_main_np() -> i32;
     fn dispatch_async_f(
@@ -21,6 +26,7 @@ extern "C" {
     fn CFRelease(cf: *mut std::ffi::c_void);
 }
 
+#[cfg(target_os = "macos")]
 fn is_sentence_initial(text: &str, start_byte: usize) -> bool {
     let before = &text[..start_byte];
     let trimmed = before.trim_end();
@@ -46,6 +52,7 @@ fn is_sentence_initial(text: &str, start_byte: usize) -> bool {
     false
 }
 
+#[cfg(target_os = "macos")]
 fn damerau_levenshtein(a: &str, b: &str) -> usize {
     let a_chars: Vec<char> = a.chars().map(|c| c.to_ascii_lowercase()).collect();
     let b_chars: Vec<char> = b.chars().map(|c| c.to_ascii_lowercase()).collect();
@@ -75,6 +82,7 @@ fn damerau_levenshtein(a: &str, b: &str) -> usize {
     dp[m][n]
 }
 
+#[cfg(target_os = "macos")]
 fn run_on_main_thread_with_timeout<F, R>(timeout: std::time::Duration, f: F) -> Result<R, CheckerError>
 where
     F: FnOnce() -> R + Send + 'static,
@@ -172,6 +180,7 @@ impl Checker for NativeChecker {
         &[Category::Spelling, Category::Grammar]
     }
 
+    #[cfg(target_os = "macos")]
     fn check(&self, text: &str, language: &str, tag: isize, mode: CheckMode) -> Result<Vec<Issue>, CheckerError> {
         let text_string = text.to_string();
         let lang_string = language.to_string();
@@ -410,5 +419,10 @@ impl Checker for NativeChecker {
 
             issues
         })
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn check(&self, text: &str, language: &str, tag: isize, mode: CheckMode) -> Result<Vec<Issue>, CheckerError> {
+        Ok(Vec::new())
     }
 }
