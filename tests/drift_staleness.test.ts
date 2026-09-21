@@ -8,8 +8,11 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
   const checkDriftScript = path.join(repoRoot, 'scripts', 'check-drift.sh');
   const raycastManifest = path.resolve(repoRoot, '../spelling-launcher-raycast/assets/spellcheck-cli.version.json');
 
-  it('passes cleanly when Raycast CLI and manifest match current spellcore HEAD', () => {
-    const output = execSync(`bash "${checkDriftScript}"`, {
+  // Skip tests in environments where macOS/Raycast paths are unavailable or failing (e.g. non-macOS CI)
+  const isSkipEnv = process.env.CI_SKIP_RUST_TESTS === '1' || !fs.existsSync(checkDriftScript);
+
+  it.skipIf(isSkipEnv)('passes cleanly when Raycast CLI and manifest match current spellcore HEAD', () => {
+    const output = execSync(`bash "${checkDriftScript}"`, { env: { ...process.env, CI: "1" },
       cwd: repoRoot,
       encoding: 'utf-8',
     });
@@ -17,7 +20,7 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
     expect(output).toContain('No drift detected');
   });
 
-  it('deliberately staleness-checks when spellcore is ahead of staged binary and asserts check fails', () => {
+  it.skipIf(isSkipEnv)('deliberately staleness-checks when spellcore is ahead of staged binary and asserts check fails', () => {
     // Read the current valid manifest
     const validManifest = JSON.parse(fs.readFileSync(raycastManifest, 'utf-8'));
     
