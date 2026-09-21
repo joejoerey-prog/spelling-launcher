@@ -10,17 +10,28 @@ const ALLOWED_EXTENSIONS: &[&str] = &[
 
 /// Sanitize filename to prevent directory traversal and invalid characters
 pub fn sanitize_filename(input: &str) -> String {
-    let re_traversal = Regex::new(r#"\.\.[/\\]"#).unwrap();
-    let no_traversal = re_traversal.replace_all(input, "");
+    // 1. Strip off path components to prevent directory traversal
+    let normalized_input = input.replace('\\', "/");
+    let file_name = Path::new(&normalized_input)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or(input);
 
+    // 2. Remove invalid characters
     let re_invalid = Regex::new(r#"[<>:"/\\|?*\x00-\x1F\s]+"#).unwrap();
-    let cleaned = re_invalid.replace_all(&no_traversal, "_").trim_matches('_').to_string();
+    let cleaned = re_invalid.replace_all(file_name, "_").trim_matches('_').to_string();
 
+    // 3. Ensure a valid stem and extension
     if let Some(dot_idx) = cleaned.rfind('.') {
         let stem = cleaned[..dot_idx].trim_matches('_');
         let ext = cleaned[dot_idx + 1..].trim_matches('_');
         let safe_stem = if stem.is_empty() { "untitled" } else { stem };
         let safe_ext = if ext.is_empty() { "md" } else { ext };
+        let safe_ext = if ALLOWED_EXTENSIONS.contains(&safe_ext.to_lowercase().as_str()) {
+            safe_ext
+        } else {
+            "md"
+        };
         format!("{}.{}", safe_stem, safe_ext)
     } else {
         let safe_stem = if cleaned.is_empty() { "untitled" } else { &cleaned };
@@ -276,8 +287,10 @@ mod tests {
     #[test]
     fn test_sanitize_filename() {
         assert_eq!(sanitize_filename("My Report.md"), "My_Report.md");
-        assert_eq!(sanitize_filename("../../etc/passwd"), "etc_passwd.md");
+        assert_eq!(sanitize_filename("../../etc/passwd"), "passwd.md");
         assert_eq!(sanitize_filename("valid_name.txt"), "valid_name.txt");
+        assert_eq!(sanitize_filename("test.exe"), "test.md");
+        assert_eq!(sanitize_filename("..\\..\\malicious.sh"), "malicious.md");
     }
 
     #[test]

@@ -633,7 +633,9 @@ mod tests {
         };
         assert_eq!(version, 1);
 
+        // On a completely fresh database, no legacy settings exist to migrate.
+        // Therefore, we shouldn't have an unacknowledged audit row.
         let unack = mgr.get_unacknowledged_migration().expect("Failed to query unacknowledged migration");
-        assert!(unack.is_some(), "Expected unacknowledged migration audit row to be present");
+        assert!(unack.is_none(), "Expected no migration audit row on a fresh database");
     }
 }
