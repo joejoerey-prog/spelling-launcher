@@ -622,7 +622,30 @@ mod tests {
 
     #[test]
     fn test_live_db_migration() {
-        let mgr = DatabaseManager::new().expect("Failed to initialize DatabaseManager on live database");
+        // We use an in-memory DB here to avoid filesystem state affecting the test.
+        // A truly "live" DB test on the filesystem would require setup/teardown of
+        // the SpellingLauncher app data directory, which is prone to test order
+        // and concurrency issues.
+        let mgr = DatabaseManager::new_in_memory().expect("Failed to initialize DatabaseManager in memory");
+
+        // We need an old payload to trigger a migration audit row insertion
+        let old_payload = r#"{"provider":"ollama","ollamaModel":"qwen2.5vl:latest"}"#;
+        mgr.set_setting("user_settings", old_payload).unwrap();
+
+        // Force the migration to run again to process the payload we just inserted.
+        // In a true live scenario, the DB would be opened, the payload would already exist,
+        // and `new()` would trigger the migration. Since `new_in_memory()` starts empty,
+        // we manually seed and re-run.
+
+        // Before re-running, we need to reset schema_version so `run_settings_migration`
+        // doesn't return early.
+        {
+            let conn = mgr.conn.lock().unwrap();
+            conn.execute("UPDATE schema_metadata SET value = 0 WHERE key = 'schema_version'", []).unwrap();
+        }
+
+        mgr.run_settings_migration().unwrap();
+
         let version: i64 = {
             let conn = mgr.conn.lock().unwrap();
             conn.query_row(
