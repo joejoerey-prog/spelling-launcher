@@ -623,6 +623,19 @@ mod tests {
     #[test]
     fn test_live_db_migration() {
         let mgr = DatabaseManager::new().expect("Failed to initialize DatabaseManager on live database");
+
+        // Reset the schema version to 0 and insert a dummy user_settings to force the migration logic to run
+        {
+            let conn = mgr.conn.lock().unwrap();
+            conn.execute("UPDATE schema_metadata SET value = 0 WHERE key = 'schema_version'", []).unwrap();
+            conn.execute(
+                "INSERT INTO app_settings (key, value) VALUES ('user_settings', '{}') ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                []
+            ).unwrap();
+        }
+
+        mgr.run_settings_migration().expect("Failed to run settings migration");
+
         let version: i64 = {
             let conn = mgr.conn.lock().unwrap();
             conn.query_row(
