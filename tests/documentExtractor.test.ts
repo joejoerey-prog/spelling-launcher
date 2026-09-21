@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractTextFromDocumentFile, cleanExtractedText } from '../src/core/engine/documentExtractor';
+import { extractTextFromDocumentFile, cleanExtractedText, extractTextFromDocx } from '../src/core/engine/documentExtractor';
 import JSZip from 'jszip';
 
 describe('Document Extractor', () => {
@@ -15,6 +15,14 @@ describe('Document Extractor', () => {
     const file = new File([mdContent], 'notes.md', { type: 'text/markdown' });
     const extracted = await extractTextFromDocumentFile(file);
     expect(extracted).toBe(mdContent);
+  });
+
+  it('throws an error if DOCX is missing word/document.xml', async () => {
+    const zip = new JSZip();
+    zip.file('dummy.txt', 'This is not a valid DOCX file.');
+    const arrayBuffer = await zip.generateAsync({ type: 'arraybuffer' });
+
+    await expect(extractTextFromDocx(arrayBuffer)).rejects.toThrow('Failed to parse DOCX document: Not a valid DOCX file: word/document.xml not found.');
   });
 
   it('extracts paragraphs from a DOCX zip archive', async () => {
