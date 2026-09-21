@@ -65,7 +65,7 @@ describe('Drift & Staleness Guard (scripts/check-drift.sh)', () => {
     }
   });
 
-  it('fails with clear error if binary is missing', () => {
+  it.skipIf(isSkipEnv)('fails with clear error if binary is missing', () => {
     try {
       execSync(`bash "${checkDriftScript}"`, {
         cwd: repoRoot,
