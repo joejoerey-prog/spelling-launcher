@@ -1,8 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { extractTextFromDocumentFile, cleanExtractedText } from '../src/core/engine/documentExtractor';
+import { extractTextFromDocumentFile, cleanExtractedText, readFileAsText } from '../src/core/engine/documentExtractor';
 import JSZip from 'jszip';
 
 describe('Document Extractor', () => {
+  describe('readFileAsText', () => {
+    it('should use file.text() when available', async () => {
+      const file = new File(['hello world'], 'test.txt', { type: 'text/plain' });
+      const result = await readFileAsText(file);
+      expect(result).toBe('hello world');
+    });
+
+    it('should fallback to FileReader when file.text() is not available', async () => {
+      const file = new File(['fallback text'], 'test.txt', { type: 'text/plain' });
+      // Remove or undefined the text method to force FileReader fallback
+      Object.defineProperty(file, 'text', { value: undefined });
+
+      const result = await readFileAsText(file);
+      expect(result).toBe('fallback text');
+    });
+  });
+
   it('reads plain text files directly', async () => {
     const textContent = 'This is a test paragraph.\n\nHere is a second sentence.';
     const file = new File([textContent], 'sample.txt', { type: 'text/plain' });
