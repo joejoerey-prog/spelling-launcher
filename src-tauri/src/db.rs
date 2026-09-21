@@ -622,7 +622,16 @@ mod tests {
 
     #[test]
     fn test_live_db_migration() {
-        let mgr = DatabaseManager::new().expect("Failed to initialize DatabaseManager on live database");
+        let mgr = DatabaseManager::new_in_memory().expect("Failed to initialize DatabaseManager on live database");
+
+        {
+            let conn = mgr.conn.lock().unwrap();
+            conn.execute("INSERT OR REPLACE INTO schema_metadata (key, value) VALUES ('schema_version', 0)", []).unwrap();
+            conn.execute("INSERT OR REPLACE INTO app_settings (key, value) VALUES ('user_settings', '{}')", []).unwrap();
+        }
+
+        mgr.run_settings_migration().expect("Failed to run settings migration");
+
         let version: i64 = {
             let conn = mgr.conn.lock().unwrap();
             conn.query_row(

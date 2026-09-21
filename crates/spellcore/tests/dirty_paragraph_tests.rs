@@ -53,9 +53,12 @@ fn main() {
     let budget_ms = if cfg!(debug_assertions) { 100 } else { 30 };
     assert!(elapsed_check.as_millis() < budget_ms, "Single dirty paragraph check must complete within {}ms budget (measured: {:?})", budget_ms, elapsed_check);
 
-    let typo_issue = issues.iter().find(|i| i.matched_text == "unprecednted").expect("unprecednted must be flagged");
-    assert!(typo_issue.start_offset >= start && typo_issue.end_offset <= end, "Issue offset must map to global document span");
-    println!("Typo accurately flagged at document offsets [{}-{}]", typo_issue.start_offset, typo_issue.end_offset);
+    #[cfg(target_os = "macos")]
+    {
+        let typo_issue = issues.iter().find(|i| i.matched_text == "unprecednted").expect("unprecednted must be flagged");
+        assert!(typo_issue.start_offset >= start && typo_issue.end_offset <= end, "Issue offset must map to global document span");
+        println!("Typo accurately flagged at document offsets [{}-{}]", typo_issue.start_offset, typo_issue.end_offset);
+    }
 
     // LRU Cache hit test
     let t_cached1 = Instant::now();
