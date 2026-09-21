@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # scripts/sync-raycast-cli.sh
-# Builds release spellcheck-cli for x86_64-apple-darwin, stamps version,
+# Builds release spellcheck-cli for aarch64-apple-darwin, stamps version,
 # generates assets/spellcheck-cli.version.json, and stages to spelling-launcher-raycast.
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,8 +14,8 @@ echo "Raycast Extension: ${RAYCAST_DIR}"
 
 # 1. Enforce Apple Silicon target
 ARCH="$(uname -m)"
-if [[ "${ARCH}" != "x86_64" ]]; then
-  echo "Error: Target architecture must be Apple Silicon (x86_64 / x86_64). Detected: ${ARCH}" >&2
+if [[ "${ARCH}" != "arm64" ]]; then
+  echo "Error: Target architecture must be Apple Silicon (arm64 / aarch64). Detected: ${ARCH}" >&2
   exit 1
 fi
 
@@ -41,7 +41,7 @@ fi
 
 GIT_SHA="${GIT_SHA:-unknown}"
 VERSION="$(grep '^version' "${REPO_ROOT}/crates/spellcheck-cli/Cargo.toml" | head -n 1 | cut -d '"' -f 2)"
-TARGET="x86_64-apple-darwin"
+TARGET="aarch64-apple-darwin"
 BUILD_PROFILE="release"
 
 echo "Building spellcheck-cli v${VERSION} (${GIT_SHA}, ${TARGET})..."
