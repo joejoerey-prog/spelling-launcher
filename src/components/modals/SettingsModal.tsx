@@ -113,13 +113,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <Sliders className="w-5 h-5 text-emerald-400" />
             <h2 className="text-base font-bold text-slate-100">Application Settings</h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-6 text-sm text-slate-300">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-6">
           {/* Unacknowledged Migration Notice */}
           {unacknowledgedMigration && (
             <div className="p-4 bg-amber-950/40 border border-amber-500/40 rounded-xl space-y-3 animate-in fade-in">

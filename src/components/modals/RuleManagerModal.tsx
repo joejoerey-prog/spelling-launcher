@@ -228,7 +228,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
             <BookOpen className="w-5 h-5 text-indigo-400" />
             <h2 className="text-base font-bold text-slate-100">Custom Rules & Local Dictionary</h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
           </button>
         </div>

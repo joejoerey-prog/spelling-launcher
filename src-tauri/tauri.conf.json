@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' asset: http://asset.localhost; connect-src 'self' ws://localhost:4400 http://localhost:* ws://localhost:*; img-src 'self' asset: http://asset.localhost data: blob:;"
     }
   },
   "bundle": {
