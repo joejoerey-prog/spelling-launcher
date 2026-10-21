@@ -35,6 +35,30 @@ describe('Document Extractor', () => {
     expect(extracted).toContain('Second paragraph with important details.');
   });
 
+  it('fixes hyphenated word line breaks', () => {
+    const rawText = "This is a com- \n prehensive test.";
+    const cleaned = cleanExtractedText(rawText);
+    expect(cleaned).toBe("This is a comprehensive test.");
+  });
+
+  it('fixes hyphenated word line breaks with Unicode letters', () => {
+    const rawText = "This is a co- \n operación test.";
+    const cleaned = cleanExtractedText(rawText);
+    expect(cleaned).toBe("This is a cooperación test.");
+  });
+
+  it('fixes hyphenated word line breaks with Unicode letters in first part', () => {
+    const rawText = "This is an espa- \n ñol test.";
+    const cleaned = cleanExtractedText(rawText);
+    expect(cleaned).toBe("This is an español test.");
+  });
+
+  it('fixes hyphenated word line breaks with space before hyphen', () => {
+    const rawText = "This is a com -\n prehensive test.";
+    const cleaned = cleanExtractedText(rawText);
+    expect(cleaned).toBe("This is a comprehensive test.");
+  });
+
   it('formats letterhead addresses, dates, and salutations from multiline PDF output', () => {
     const rawPdf = `Joe Rey
 2

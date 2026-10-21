@@ -228,7 +228,7 @@ export function cleanExtractedText(raw: string): string {
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     // Fix hyphenated word line breaks (e.g. "com- \n prehensive" -> "comprehensive")
-    .replace(/(\w+)-\s*\n\s*(\w+)/g, '$1$2')
+    .replace(/([\p{L}\p{N}_]+)\s*[-\u00AD\u2010-\u2013]\s*\n\s*([\p{L}\p{N}_]+)/gu, '$1$2')
     // Break paragraphs before numbered sections e.g. " 1. ", " 2.1 "
     .replace(/(\s+)([0-9]{1,2}(\.[0-9]+)*\.\s+[A-Z])/g, '\n\n$2')
     // Break before common document headers
