@@ -279,10 +279,9 @@ impl DatabaseManager {
 
     pub fn add_ignored_term(&self, term: &str) -> Result<i64, String> {
         let conn = self.conn.lock().unwrap();
-        let now = "2026-09-02T20:00:00Z";
         conn.execute(
-            "INSERT OR IGNORE INTO ignored_terms (term, created_at) VALUES (?1, ?2)",
-            params![term.trim().to_lowercase(), now],
+            "INSERT OR IGNORE INTO ignored_terms (term, created_at) VALUES (?1, datetime('now'))",
+            params![term.trim().to_lowercase()],
         ).map_err(|e| e.to_string())?;
         Ok(conn.last_insert_rowid())
     }

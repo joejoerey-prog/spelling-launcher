@@ -4,6 +4,8 @@ use std::process::Command;
 use regex::Regex;
 use crate::models::FileOperationResult;
 
+const WRITABLE_EXTENSIONS: &[&str] = &["txt", "md", "markdown", "text"];
+
 const ALLOWED_EXTENSIONS: &[&str] = &[
     "txt", "md", "markdown", "text", "pdf", "pages", "docx", "rtf",
 ];
@@ -64,9 +66,7 @@ pub fn extract_native_document(file_path: &str) -> Result<String, String> {
     }
 
     // Try compiled native doc_extractor binary first
-    let mut exe_candidates = vec![
-        PathBuf::from("/Users/joerey/.gemini/antigravity/scratch/wordtune-personal/src-tauri/bin/doc_extractor"),
-    ];
+    let mut exe_candidates: Vec<PathBuf> = Vec::new();
 
     if let Ok(current_exe) = std::env::current_exe() {
         if let Some(parent) = current_exe.parent() {
@@ -93,59 +93,57 @@ pub fn extract_native_document(file_path: &str) -> Result<String, String> {
     }
 
     // Fallback on macOS: execute swift directly with PDFKit/mdimport
-    let swift_script = format!(
-        r#"
+    let swift_script = r#"
 import Foundation
 import PDFKit
 
-let path = "{}"
+let path = ProcessInfo.processInfo.environment["SL_DOC_PATH"] ?? ""
 let url = URL(fileURLWithPath: path)
 let ext = url.pathExtension.lowercased()
 
-if ext == "pdf" {{
-    if let doc = PDFDocument(url: url) {{
+if ext == "pdf" {
+    if let doc = PDFDocument(url: url) {
         var pages: [String] = []
-        for i in 0..<doc.pageCount {{
-            if let page = doc.page(at: i), let str = page.string {{
+        for i in 0..<doc.pageCount {
+            if let page = doc.page(at: i), let str = page.string {
                 let trimmed = str.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty {{ pages.append(trimmed) }}
-            }}
-        }}
+                if !trimmed.isEmpty { pages.append(trimmed) }
+            }
+        }
         print(pages.joined(separator: "\n\n"))
-    }}
-}} else if ext == "pages" {{
+    }
+} else if ext == "pages" {
     let task = Process()
     task.executableURL = URL(fileURLWithPath: "/usr/bin/mdimport")
     task.arguments = ["-t", "-d3", path]
     let pipe = Pipe()
     task.standardOutput = pipe
     task.standardError = pipe
-    if let _ = try? task.run() {{
+    if let _ = try? task.run() {
         task.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         if let output = String(data: data, encoding: .utf8),
-           let start = output.range(of: "kMDItemTextContent = \"") {{
+           let start = output.range(of: "kMDItemTextContent = \"") {
             let after = output[start.upperBound...]
-            if let end = after.range(of: "\";\n") {{
+            if let end = after.range(of: "\";\n") {
                 var raw = String(after[..<end.lowerBound])
                 raw = raw.replacingOccurrences(of: "\\\"", with: "\"")
                 let lines = raw.components(separatedBy: "\\n")
-                let filtered = lines.filter {{ line in
+                let filtered = lines.filter { line in
                     let l = line.trimmingCharacters(in: .whitespaces).lowercased()
                     return !l.hasSuffix(".jpg") && !l.hasSuffix(".png") && !l.hasSuffix(".pdf")
-                }}
+                }
                 print(filtered.joined(separator: "\n\n"))
-            }}
-        }}
-    }}
-}}
-"#,
-        file_path.replace('"', "\\\"")
-    );
+            }
+        }
+    }
+}
+"#;
 
     let output = Command::new("swift")
         .arg("-e")
-        .arg(&swift_script)
+        .arg(swift_script)
+        .env("SL_DOC_PATH", file_path)
         .output()
         .map_err(|e| format!("Swift execution error: {}", e))?;
 
@@ -197,12 +195,24 @@ pub fn parse_document_from_bytes(filename: &str, bytes: &[u8]) -> Result<String,
     }
 
     let temp_dir = std::env::temp_dir();
-    let temp_file = temp_dir.join(format!("spelling_launcher_temp_{}.{}", std::process::id(), ext));
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let temp_file = temp_dir.join(format!(
+        "spelling_launcher_temp_{}_{}.{}",
+        std::process::id(),
+        nanos,
+        ext
+    ));
 
     fs::write(&temp_file, bytes)
         .map_err(|e| format!("Failed to write temporary document: {}", e))?;
 
-    let result = extract_native_document(temp_file.to_str().unwrap());
+    let result = match temp_file.to_str() {
+        Some(p) => extract_native_document(p),
+        None => Err("Temporary file path is not valid UTF-8".to_string()),
+    };
 
     // Clean up temporary file
     let _ = fs::remove_file(&temp_file);
@@ -218,6 +228,16 @@ pub fn save_document_file(
 ) -> Result<FileOperationResult, String> {
     let path = Path::new(file_path);
     validate_extension(path)?;
+
+    // Only plain-text formats may be written; PDF/DOCX/Pages must not be overwritten with text.
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+    if !WRITABLE_EXTENSIONS.contains(&ext.as_str()) {
+        return Err(format!("Cannot save over a .{} file; use Save As", ext));
+    }
 
     if let Some(parent) = path.parent() {
         if !parent.exists() {
@@ -266,7 +286,10 @@ pub fn export_document_file(
     };
 
     let target_path = base_dir.join(safe_name);
-    save_document_file(target_path.to_str().unwrap(), content, false)
+    let target = target_path
+        .to_str()
+        .ok_or_else(|| "Export path is not valid UTF-8".to_string())?;
+    save_document_file(target, content, false)
 }
 
 #[cfg(test)]
@@ -293,7 +316,14 @@ mod tests {
     #[test]
     fn test_save_and_read_roundtrip() {
         let temp_dir = std::env::temp_dir();
-        let test_file = temp_dir.join("test_roundtrip_launcher.md");
+        let test_file = temp_dir.join(format!(
+            "test_roundtrip_launcher_{}_{}.md",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
         let content = "# Title\n\nThis is test text for Spelling Launcher.";
 
         let save_res = save_document_file(test_file.to_str().unwrap(), content, false);
@@ -305,5 +335,15 @@ mod tests {
         assert_eq!(read_content, content);
 
         let _ = fs::remove_file(test_file);
+    }
+
+    #[test]
+    fn test_save_refuses_non_text_extensions() {
+        for name in ["x.pdf", "x.docx", "x.pages", "x.rtf"] {
+            let p = std::env::temp_dir().join(format!("sl_refuse_{}_{}", std::process::id(), name));
+            let err = save_document_file(p.to_str().unwrap(), "hi", false).unwrap_err();
+            assert!(err.contains("use Save As"), "{}", err);
+            assert!(!p.exists());
+        }
     }
 }

@@ -2,7 +2,6 @@ use std::process::Command;
 
 fn main() {
     let git_sha = Command::new("git")
-        .env("HOME", "/Users/joerey/.gemini/antigravity/scratch")
         .args(["rev-parse", "--short", "HEAD"])
         .output()
         .ok()
