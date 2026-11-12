@@ -17,6 +17,8 @@ import { editorStore } from '../../core/state/editorStore';
 import { TauriBridge, isTauri } from '../../core/bridge/tauriBridge';
 import { rulesStore } from '../../core/state/rulesStore';
 import { extractTextFromDocumentFile, cleanExtractedText } from '../../core/engine/documentExtractor';
+import { settingsStore } from '../../core/state/settingsStore';
+import { SHORTCUT_EVENT, ShortcutAction, effectiveShortcuts, formatCombo } from '../../core/shortcuts';
 
 export interface AppHeaderProps {
   onOpenSettings: () => void;
@@ -40,6 +42,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   }, []);
 
   const state = editorStore.getState;
+  const keys = effectiveShortcuts(settingsStore.state.shortcuts);
+  const withKey = (label: string, action: ShortcutAction) => (keys[action] ? `${label} (${formatCombo(keys[action])})` : label);
   const canUndo = state.historyIndex > 0;
   const canRedo = state.historyIndex < state.history.length - 1;
 
@@ -123,6 +127,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     }
   };
 
+  // Open / New shortcuts are dispatched from App's key handler.
+  React.useEffect(() => {
+    const onShortcut = (e: Event) => {
+      const action = (e as CustomEvent<ShortcutAction>).detail;
+      if (action === 'open' && !isOpeningFile) handleOpenFileClick();
+      else if (action === 'newDocument') handleNewDocument();
+    };
+    window.addEventListener(SHORTCUT_EVENT, onShortcut);
+    return () => window.removeEventListener(SHORTCUT_EVENT, onShortcut);
+  });
+
   return (
     <header className="h-14 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between shrink-0 select-none">
       {/* Hidden file input supporting PDF, Apple Pages, DOCX, and Markdown/Text */}
@@ -158,7 +173,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
       {/* Document & History Actions */}
       <div className="flex items-center gap-1.5">
-        <Button variant="ghost" size="sm" onClick={handleNewDocument} title="New Document">
+        <Button variant="ghost" size="sm" onClick={handleNewDocument} title={withKey('New Document', 'newDocument')}>
           New
         </Button>
         <Button
@@ -167,14 +182,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           icon={isOpeningFile ? <Loader2 className="w-4 h-4 animate-spin text-emerald-400" /> : <FolderOpen className="w-4 h-4" />}
           onClick={handleOpenFileClick}
           disabled={isOpeningFile}
-          title="Open Document (.pdf, .pages, .docx, .md, .txt)"
+          title={withKey('Open Document (.pdf, .pages, .docx, .md, .txt)', 'open')}
         >
           {isOpeningFile ? 'Reading...' : 'Open'}
         </Button>
-        <Button variant="ghost" size="sm" icon={<Save className="w-4 h-4" />} onClick={() => editorStore.saveCurrentDocument()} title="Save Document (Cmd+S)">
+        <Button variant="ghost" size="sm" icon={<Save className="w-4 h-4" />} onClick={() => editorStore.saveCurrentDocument()} title={withKey('Save Document', 'save')}>
           Save
         </Button>
-        <Button variant="ghost" size="sm" icon={<Download className="w-4 h-4" />} onClick={onOpenExport} title="Export Document">
+        <Button variant="ghost" size="sm" icon={<Download className="w-4 h-4" />} onClick={onOpenExport} title={withKey('Export Document', 'export')}>
           Export
         </Button>
 
@@ -186,7 +201,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           icon={<Undo2 className="w-4 h-4" />}
           onClick={() => editorStore.undo()}
           disabled={!canUndo}
-          title="Undo (Cmd+Z)"
+          title={withKey('Undo', 'undo')}
           aria-label="Undo"
         />
         <Button
@@ -195,7 +210,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           icon={<Redo2 className="w-4 h-4" />}
           onClick={() => editorStore.redo()}
           disabled={!canRedo}
-          title="Redo (Cmd+Shift+Z)"
+          title={withKey('Redo', 'redo')}
           aria-label="Redo"
         />
 
@@ -208,7 +223,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               icon={<CheckCheck className="w-4 h-4 text-emerald-400" />}
               onClick={onOpenApplyAll}
               className="bg-emerald-950/50 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/60 shadow-sm"
-              title="Review & Apply All Gate-Verified Safe Fixes"
+              title={withKey('Review & Apply All Gate-Verified Safe Fixes', 'applyAll')}
             >
               Apply Safe ({eligibleCount})
             </Button>
@@ -220,7 +235,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <Button variant="ghost" size="sm" icon={<BookOpen className="w-4 h-4" />} onClick={onOpenRules} title="Linguistic Rules & Custom Terms">
           Rules
         </Button>
-        <Button variant="ghost" size="sm" icon={<SlidersHorizontal className="w-4 h-4" />} onClick={onOpenSettings} title="Settings">
+        <Button variant="ghost" size="sm" icon={<SlidersHorizontal className="w-4 h-4" />} onClick={onOpenSettings} title={withKey('Settings', 'openSettings')}>
           Settings
         </Button>
       </div>

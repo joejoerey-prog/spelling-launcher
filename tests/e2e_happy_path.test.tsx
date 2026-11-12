@@ -67,7 +67,7 @@ This is a very unique approach for the the user.`;
     });
 
     // 8. Open Export modal
-    const exportButton = screen.getByTitle('Export Document');
+    const exportButton = screen.getByTitle('Export Document (⌘E)');
     fireEvent.click(exportButton);
 
     await waitFor(() => {

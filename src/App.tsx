@@ -14,6 +14,8 @@ import { editorStore } from './core/state/editorStore';
 import { rulesStore } from './core/state/rulesStore';
 import { settingsStore } from './core/state/settingsStore';
 import { styleStore } from './core/state/styleStore';
+import { actionForCombo, effectiveShortcuts, emitShortcut, eventToCombo } from './core/shortcuts';
+import { TauriBridge } from './core/bridge/tauriBridge';
 
 export const App: React.FC = () => {
   const [, setTick] = useState(0);
@@ -34,35 +36,34 @@ export const App: React.FC = () => {
       editorStore.refreshAllIssues();
     });
 
-    // Keyboard Shortcuts
+    // Keyboard shortcuts (user-configurable in Settings)
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isCmdOrCtrl = e.metaKey || e.ctrlKey;
-
-      // Let text inputs keep their native undo/redo.
-      const inInput = e.target instanceof HTMLInputElement;
-
-      if (isCmdOrCtrl && (e.key === 'z' || e.key === 'y') && inInput) {
-        return;
-      }
-
-      if (isCmdOrCtrl && e.key === 'z') {
-        e.preventDefault();
-        if (e.shiftKey) {
-          editorStore.redo();
-        } else {
-          editorStore.undo();
-        }
-      } else if (isCmdOrCtrl && e.key === 'y') {
-        e.preventDefault();
-        editorStore.redo();
-      } else if (isCmdOrCtrl && e.key === 's') {
-        e.preventDefault();
-        editorStore.saveCurrentDocument();
-      } else if (e.key === 'Escape') {
+      if (e.key === 'Escape') {
         setIsSettingsOpen(false);
         setIsRulesOpen(false);
         setIsExportOpen(false);
         setIsApplyAllOpen(false);
+        return;
+      }
+
+      const combo = eventToCombo(e);
+      if (!combo) return;
+      const action = actionForCombo(effectiveShortcuts(settingsStore.state.shortcuts), combo);
+      if (!action) return;
+
+      // Let text inputs keep their native undo/redo.
+      if ((action === 'undo' || action === 'redo') && e.target instanceof HTMLInputElement) return;
+
+      e.preventDefault();
+      switch (action) {
+        case 'save': editorStore.saveCurrentDocument(); break;
+        case 'undo': editorStore.undo(); break;
+        case 'redo': editorStore.redo(); break;
+        case 'export': setIsExportOpen(true); break;
+        case 'applyAll': setIsApplyAllOpen(true); break;
+        case 'openSettings': setIsSettingsOpen(true); break;
+        case 'generateRewrites': editorStore.generateRewritesForSelected(); break;
+        default: emitShortcut(action); // open, newDocument, toggleRaw: handled by their components
       }
     };
 
@@ -75,6 +76,18 @@ export const App: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
+  // System-wide summon hotkey: re-register whenever the saved combo changes.
+  const summonCombo = effectiveShortcuts(settingsStore.state.shortcuts).summon;
+  useEffect(() => {
+    let active = true;
+    TauriBridge.setSummonShortcut(summonCombo).catch((err: any) => {
+      if (active) editorStore.showError(`Could not register the system-wide shortcut: ${err?.message || err}`);
+    });
+    return () => {
+      active = false;
+    };
+  }, [summonCombo]);
 
   const state = editorStore.getState;
 

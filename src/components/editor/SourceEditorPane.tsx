@@ -6,6 +6,7 @@ import { SentenceNode } from '../../types/document';
 import { DeterministicIssue } from '../../types/suggestions';
 import { extractTextFromDocumentFile } from '../../core/engine/documentExtractor';
 import { rulesStore } from '../../core/state/rulesStore';
+import { SHORTCUT_EVENT, ShortcutAction } from '../../core/shortcuts';
 import { isTauri, TauriBridge } from '../../core/bridge/tauriBridge';
 
 const UNDERLINE_BY_CATEGORY = (category: DeterministicIssue['category']): string => {
@@ -62,6 +63,14 @@ export const SourceEditorPane: React.FC = () => {
 
   const state = editorStore.getState;
   const [rawMode, setRawMode] = useState(false);
+
+  useEffect(() => {
+    const onShortcut = (e: Event) => {
+      if ((e as CustomEvent<ShortcutAction>).detail === 'toggleRaw') setRawMode((m) => !m);
+    };
+    window.addEventListener(SHORTCUT_EVENT, onShortcut);
+    return () => window.removeEventListener(SHORTCUT_EVENT, onShortcut);
+  }, []);
   const [isDragging, setIsDragging] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
 

@@ -95,7 +95,7 @@ describe('keyboard shortcuts', () => {
     const save = vi.spyOn(editorStore, 'saveCurrentDocument').mockResolvedValue();
     render(<App />);
     fireEvent.keyDown(document.body, { key: 's', metaKey: true });
-    fireEvent.click(screen.getByTitle('Save Document (Cmd+S)'));
+    fireEvent.click(screen.getByTitle('Save Document (⌘S)'));
     expect(save).toHaveBeenCalledTimes(2);
   });
 });

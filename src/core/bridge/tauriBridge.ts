@@ -36,7 +36,29 @@ const DEFAULT_MOCK_RULES: UserRule[] = [
 /**
  * Tauri Bridge API with automatic environment detection and graceful browser fallback
  */
+let registeredSummon = '';
+
 export const TauriBridge = {
+  /** Registers (or clears, for '') the system-wide hotkey that brings the window to the front. */
+  async setSummonShortcut(accelerator: string): Promise<void> {
+    if (!isTauri() || accelerator === registeredSummon) return;
+    const { register, unregister } = await import('@tauri-apps/plugin-global-shortcut');
+    if (registeredSummon) {
+      await unregister(registeredSummon);
+      registeredSummon = '';
+    }
+    if (!accelerator) return;
+    await register(accelerator, async (event) => {
+      if (event.state !== 'Pressed') return;
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      const win = getCurrentWindow();
+      await win.unminimize();
+      await win.show();
+      await win.setFocus();
+    });
+    registeredSummon = accelerator;
+  },
+
   async openDocumentDialog(): Promise<string | null> {
     if (isTauri()) {
       const { open } = await import('@tauri-apps/plugin-dialog');

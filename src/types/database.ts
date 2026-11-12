@@ -45,4 +45,6 @@ export interface AppSettings {
   language?: 'en_GB' | 'en_US';
   maxSentenceLengthThreshold?: number;
   autoCheckPassive?: boolean;
+  /** User overrides of DEFAULT_SHORTCUTS; '' disables an action's shortcut. */
+  shortcuts?: Partial<import('../core/shortcuts').ShortcutMap>;
 }

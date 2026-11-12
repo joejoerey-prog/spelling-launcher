@@ -6,6 +6,8 @@ import { TauriBridge } from '../../core/bridge/tauriBridge';
 import { SettingsMigration } from '../../types/database';
 import { Button } from '../ui/Button';
 import { useDialogFocus } from './useDialogFocus';
+import { ShortcutSettings } from './ShortcutSettings';
+import { DEFAULT_SHORTCUTS, ShortcutAction, ShortcutMap, effectiveShortcuts } from '../../core/shortcuts';
 
 export interface SettingsModalProps {
   isOpen: boolean;
@@ -29,6 +31,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [checkTypography, setCheckTypography] = useState(current.autoCheckTypography ?? true);
   const [checkRepetition, setCheckRepetition] = useState(current.autoCheckRepetition ?? true);
   const [unacknowledgedMigration, setUnacknowledgedMigration] = useState<SettingsMigration | null>(null);
+  const [shortcuts, setShortcuts] = useState<ShortcutMap>(effectiveShortcuts(current.shortcuts));
 
   // Sync state and check for unacknowledged database migration on open
   useEffect(() => {
@@ -43,6 +46,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       setModel(latest.openaiModel || 'gpt-4o-mini');
       setCheckTypography(latest.autoCheckTypography ?? true);
       setCheckRepetition(latest.autoCheckRepetition ?? true);
+      setShortcuts(effectiveShortcuts(latest.shortcuts));
 
       TauriBridge.getUnacknowledgedMigration().then((mig) => {
         if (mig) {
@@ -101,6 +105,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       openaiModel: model,
       autoCheckTypography: checkTypography,
       autoCheckRepetition: checkRepetition,
+      // Store only changed shortcuts so future default changes still reach untouched actions.
+      shortcuts: Object.fromEntries(
+        (Object.keys(DEFAULT_SHORTCUTS) as ShortcutAction[])
+          .filter((k) => shortcuts[k] !== DEFAULT_SHORTCUTS[k])
+          .map((k) => [k, shortcuts[k]])
+      ),
     });
     editorStore.refreshAllIssues();
     onClose();
@@ -414,6 +424,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </label>
             </div>
           </div>
+
+          <ShortcutSettings value={shortcuts} onChange={setShortcuts} />
         </div>
 
         {/* Footer */}
