@@ -155,6 +155,7 @@ export const SuggestionPane: React.FC = () => {
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCustomApply()}
+                  aria-label="Custom edit text"
                   placeholder="Type your own variation..."
                   className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
                 />
@@ -163,6 +164,7 @@ export const SuggestionPane: React.FC = () => {
                   size="sm"
                   onClick={handleCustomApply}
                   disabled={!customText.trim()}
+                  aria-label="Apply custom edit"
                   className="text-xs"
                 >
                   <ArrowRight className="w-3.5 h-3.5" />

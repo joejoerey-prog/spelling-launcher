@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { editorStore } from '../../core/state/editorStore';
-import { TauriBridge } from '../../core/bridge/tauriBridge';
+import { TauriBridge, isTauri } from '../../core/bridge/tauriBridge';
 import { rulesStore } from '../../core/state/rulesStore';
 import { extractTextFromDocumentFile, cleanExtractedText } from '../../core/engine/documentExtractor';
 
@@ -55,40 +55,46 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     return count;
   }, [state.allDocumentIssues]);
 
-  const handleNewDocument = () => {
+  const handleNewDocument = async () => {
     if (state.document.isDirty) {
-      if (!confirm('You have unsaved changes. Create a new document anyway?')) return;
+      if (!(await TauriBridge.confirm('You have unsaved changes. Create a new document anyway?'))) return;
     }
     editorStore.loadDocument('# Untitled Document\n\nStart writing or paste your text here to rewrite sentences.', null, 'Untitled.md');
   };
 
   const handleOpenFileClick = async () => {
+    if (editorStore.getState.document.isDirty) {
+      if (!(await TauriBridge.confirm('You have unsaved changes. Open another document anyway?'))) return;
+    }
+
+    // Outside Tauri there is no native dialog, so use the hidden web file input.
+    if (!isTauri()) {
+      fileInputRef.current?.click();
+      return;
+    }
+
     try {
       const selectedPath = await TauriBridge.openDocumentDialog();
-      if (selectedPath) {
-        setIsOpeningFile(true);
-        const fileName = selectedPath.split('/').pop() || 'Document';
-        const res = await TauriBridge.readDocument(selectedPath);
-        if (res.content) {
-          const formatted = cleanExtractedText(res.content);
-          editorStore.loadDocument(formatted, selectedPath, fileName);
-          await rulesStore.addRecentDoc({
-            file_path: selectedPath,
-            title: fileName.replace(/\.[^/.]+$/, ''),
-            word_count: formatted.split(/\s+/).filter(Boolean).length,
-            last_modified: 'Just now',
-            snippet: formatted.slice(0, 100),
-          });
-        }
-        return;
+      if (!selectedPath) return; // Cancelled: do nothing.
+      setIsOpeningFile(true);
+      const fileName = selectedPath.split('/').pop() || 'Document';
+      const res = await TauriBridge.readDocument(selectedPath);
+      if (res.content) {
+        const formatted = cleanExtractedText(res.content);
+        editorStore.loadDocument(formatted, selectedPath, fileName);
+        await rulesStore.addRecentDoc({
+          file_path: selectedPath,
+          title: fileName.replace(/\.[^/.]+$/, ''),
+          word_count: formatted.split(/\s+/).filter(Boolean).length,
+          last_modified: 'Just now',
+          snippet: formatted.slice(0, 100),
+        });
       }
-    } catch {
-      // Fallback to web input if dialog plugin not active
+    } catch (err: any) {
+      editorStore.showError(`Could not open document: ${err?.message || err}`);
     } finally {
       setIsOpeningFile(false);
     }
-
-    fileInputRef.current?.click();
   };
 
   const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,30 +116,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         snippet: content.slice(0, 100),
       });
     } catch (err: any) {
-      alert(`Could not open document "${file.name}":\n${err?.message || err}`);
+      editorStore.showError(`Could not open document "${file.name}": ${err?.message || err}`);
     } finally {
       setIsOpeningFile(false);
       e.target.value = '';
-    }
-  };
-
-  const handleSaveDocument = async () => {
-    const doc = state.document;
-    const targetPath = doc.filePath || doc.fileName || 'document.md';
-    try {
-      const res = await TauriBridge.saveDocument(targetPath, doc.rawContent, true);
-      if (res.success) {
-        editorStore.markSaved(targetPath);
-        await rulesStore.addRecentDoc({
-          file_path: targetPath,
-          title: doc.fileName.replace(/\.[^/.]+$/, ''),
-          word_count: doc.rawContent.split(/\s+/).filter(Boolean).length,
-          last_modified: 'Just now',
-          snippet: doc.rawContent.slice(0, 100),
-        });
-      }
-    } catch (e: any) {
-      alert(`Save failed: ${e?.message || e}`);
     }
   };
 
@@ -151,7 +137,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       {/* Brand & Document Name */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-950/40 border border-emerald-400/30">
-          <Rocket className="w-4 h-4 text-emerald-100 animate-pulse" />
+          <Rocket className="w-4 h-4 text-emerald-100" />
           <span className="font-bold text-sm tracking-tight text-white">Spelling Launcher</span>
         </div>
 
@@ -185,7 +171,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         >
           {isOpeningFile ? 'Reading...' : 'Open'}
         </Button>
-        <Button variant="ghost" size="sm" icon={<Save className="w-4 h-4" />} onClick={handleSaveDocument} title="Save Document (Cmd+S)">
+        <Button variant="ghost" size="sm" icon={<Save className="w-4 h-4" />} onClick={() => editorStore.saveCurrentDocument()} title="Save Document (Cmd+S)">
           Save
         </Button>
         <Button variant="ghost" size="sm" icon={<Download className="w-4 h-4" />} onClick={onOpenExport} title="Export Document">
@@ -201,6 +187,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           onClick={() => editorStore.undo()}
           disabled={!canUndo}
           title="Undo (Cmd+Z)"
+          aria-label="Undo"
         />
         <Button
           variant="ghost"
@@ -209,6 +196,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           onClick={() => editorStore.redo()}
           disabled={!canRedo}
           title="Redo (Cmd+Shift+Z)"
+          aria-label="Redo"
         />
 
         {eligibleCount > 0 && onOpenApplyAll && (

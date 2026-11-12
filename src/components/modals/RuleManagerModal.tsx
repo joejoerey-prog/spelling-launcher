@@ -5,6 +5,7 @@ import { styleStore } from '../../core/state/styleStore';
 import { editorStore } from '../../core/state/editorStore';
 import { UserRule } from '../../types/database';
 import { Button } from '../ui/Button';
+import { useDialogFocus } from './useDialogFocus';
 
 export interface RuleManagerModalProps {
   isOpen: boolean;
@@ -107,6 +108,9 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
   const [starterPackSuccess, setStarterPackSuccess] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [, setStyleTick] = useState(0);
+  const dialogRef = useDialogFocus(isOpen);
+
+  const errText = (e: any) => String(e?.message || e);
 
   useEffect(() => {
     return styleStore.subscribe(() => setStyleTick((t) => t + 1));
@@ -131,14 +135,20 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
       return;
     }
 
-    await rulesStore.addRule({
-      name: ruleName.trim(),
-      pattern: pattern.trim(),
-      replacement: replacement.trim(),
-      category,
-      description: description.trim() || `Replace with "${replacement.trim()}"`,
-      is_active: true,
-    });
+    try {
+      await rulesStore.addRule({
+        name: ruleName.trim(),
+        pattern: pattern.trim(),
+        replacement: replacement.trim(),
+        category,
+        description: description.trim() || `Replace with "${replacement.trim()}"`,
+        is_active: true,
+      });
+    } catch (err: any) {
+      // The backend rejects patterns its regex engine cannot compile.
+      setError(`Rule rejected: ${errText(err)}`);
+      return;
+    }
 
     setRuleName('');
     setPattern('');
@@ -163,38 +173,57 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
       setStarterPackSuccess(true);
       setTimeout(() => setStarterPackSuccess(false), 4000);
     } catch (err: any) {
-      setError(`Failed to load starter pack: ${err?.message || err}`);
+      setError(`Failed to load starter pack: ${errText(err)}`);
     } finally {
       setIsImporting(false);
     }
   };
 
   const handleToggle = async (rule: UserRule) => {
-    if (rule.id) {
+    if (!rule.id) return;
+    try {
       await rulesStore.toggleRule(rule.id, !rule.is_active);
-      editorStore.refreshAllIssues();
+      setError(null);
+    } catch (err: any) {
+      setError(`Could not update rule: ${errText(err)}`);
     }
+    editorStore.refreshAllIssues();
   };
 
   const handleDelete = async (id?: number) => {
-    if (id) {
+    if (!id) return;
+    try {
       await rulesStore.deleteRule(id);
-      editorStore.refreshAllIssues();
+      setError(null);
+    } catch (err: any) {
+      setError(`Could not delete rule: ${errText(err)}`);
     }
+    editorStore.refreshAllIssues();
   };
 
   const handleAddIgnored = async () => {
     if (!newIgnoredTerm.trim()) return;
-    await rulesStore.addIgnoredTerm(newIgnoredTerm.trim());
-    setNewIgnoredTerm('');
+    try {
+      await rulesStore.addIgnoredTerm(newIgnoredTerm.trim());
+      setNewIgnoredTerm('');
+      setError(null);
+    } catch (err: any) {
+      setError(`Could not add term: ${errText(err)}`);
+    }
     editorStore.refreshAllIssues();
   };
 
   const handleRemoveIgnored = async (id?: number, term?: string) => {
-    if (id && term) {
+    if (!id || !term) return;
+    try {
       await rulesStore.removeIgnoredTerm(id, term);
-      editorStore.refreshAllIssues();
+      // A learned word is stored in the same backend ignored list, so keep both in step.
+      await styleStore.removeLearnedWord(term);
+      setError(null);
+    } catch (err: any) {
+      setError(`Could not remove term: ${errText(err)}`);
     }
+    editorStore.refreshAllIssues();
   };
 
   const handleUnsuppress = async (ruleId: string) => {
@@ -208,25 +237,40 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
   };
 
   const handleAddLearnedWord = async () => {
-    if (!newLearnedWord.trim()) return;
-    await styleStore.addLearnedWord(newLearnedWord.trim());
+    const word = newLearnedWord.trim();
+    if (!word) return;
+    // Goes through the store so the backend ignored list is updated as well as the style store.
+    await editorStore.learnWord(word);
     setNewLearnedWord('');
-    editorStore.refreshAllIssues();
   };
 
   const handleRemoveLearnedWord = async (word: string) => {
-    await styleStore.removeLearnedWord(word);
+    try {
+      await styleStore.removeLearnedWord(word);
+      const item = rulesStore.state.ignoredList.find((i) => i.term.toLowerCase() === word.toLowerCase());
+      if (item?.id) await rulesStore.removeIgnoredTerm(item.id, item.term);
+      setError(null);
+    } catch (err: any) {
+      setError(`Could not forget word: ${errText(err)}`);
+    }
     editorStore.refreshAllIssues();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rules-modal-title"
+        tabIndex={-1}
+        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <BookOpen className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-base font-bold text-slate-100">Custom Rules & Local Dictionary</h2>
+            <h2 id="rules-modal-title" className="text-base font-bold text-slate-100">Custom Rules & Local Dictionary</h2>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
@@ -263,12 +307,18 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            Learned Style & System Dict ({suppressedRules.length + learnedWords.length})
+            Learned Style & Words ({suppressedRules.length + learnedWords.length})
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1 text-sm text-slate-300">
+          {error && (
+            <div role="alert" className="p-2.5 rounded-lg bg-rose-950/60 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
           {activeTab === 'rules' && (
             <>
               {/* LanguageTool Starter Pack Banner */}
@@ -307,17 +357,11 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                   <Plus className="w-3.5 h-3.5 text-sky-400" /> Create New Linguistic Rule
                 </div>
 
-                {error && (
-                  <div className="p-2.5 rounded-lg bg-rose-950/60 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-400">Rule Name</label>
+                    <label htmlFor="rule-name" className="text-xs text-slate-400">Rule Name</label>
                     <input
+                      id="rule-name"
                       type="text"
                       value={ruleName}
                       onChange={(e) => setRuleName(e.target.value)}
@@ -326,8 +370,9 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-400">Category</label>
+                    <label htmlFor="rule-category" className="text-xs text-slate-400">Category</label>
                     <select
+                      id="rule-category"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
@@ -343,8 +388,9 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-400">Pattern (Regex / Text)</label>
+                    <label htmlFor="rule-pattern" className="text-xs text-slate-400">Pattern (Regex / Text)</label>
                     <input
+                      id="rule-pattern"
                       type="text"
                       value={pattern}
                       onChange={(e) => setPattern(e.target.value)}
@@ -353,8 +399,9 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-400">Replacement</label>
+                    <label htmlFor="rule-replacement" className="text-xs text-slate-400">Replacement</label>
                     <input
+                      id="rule-replacement"
                       type="text"
                       value={replacement}
                       onChange={(e) => setReplacement(e.target.value)}
@@ -365,8 +412,9 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400">Description (Optional)</label>
+                  <label htmlFor="rule-description" className="text-xs text-slate-400">Description (Optional)</label>
                   <input
+                    id="rule-description"
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -422,6 +470,9 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
 
                         <div className="flex items-center gap-2 shrink-0">
                           <button
+                            role="switch"
+                            aria-checked={rule.is_active}
+                            aria-label={`${rule.is_active ? 'Disable' : 'Enable'} rule ${rule.name}`}
                             onClick={() => handleToggle(rule)}
                             className={`w-9 h-5 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${
                               rule.is_active ? 'bg-emerald-500' : 'bg-slate-700'
@@ -437,6 +488,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                             onClick={() => handleDelete(rule.id)}
                             className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg transition-colors"
                             title="Delete rule"
+                            aria-label={`Delete rule ${rule.name}`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -458,6 +510,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                   value={newIgnoredTerm}
                   onChange={(e) => setNewIgnoredTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddIgnored()}
+                  aria-label="Term to ignore"
                   placeholder="Add custom word, acronym or brand to ignore..."
                   className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
                 />
@@ -481,6 +534,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                         <span>{item.term}</span>
                         <button
                           onClick={() => handleRemoveIgnored(item.id, item.term)}
+                          aria-label={`Remove ignored term ${item.term}`}
                           className="text-slate-400 hover:text-rose-400"
                         >
                           <X className="w-3 h-3" />
@@ -494,7 +548,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
           )}
 
           {activeTab === 'learned_style' && (
-            /* Learned Style & System Dictionary Tab */
+            /* Learned Style & Words Tab */
             <div className="space-y-6">
               {/* Feedback-driven rule suppression */}
               <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-3">
@@ -582,17 +636,17 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                 )}
               </div>
 
-              {/* System Dictionary & Learned Words */}
+              {/* Learned Words */}
               <div className="p-4 bg-slate-950/60 rounded-xl border border-slate-800 space-y-3">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-emerald-400" />
                     <span className="font-semibold text-xs text-slate-200 uppercase tracking-wider">
-                      Learned Words (macOS AppleSpell System Dictionary)
+                      Learned Words
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">
-                    Words added here are learned into the native macOS spellchecker (<code className="text-sky-300">com.apple.applespell</code>) and will never be flagged as typos across any native app.
+                    Words added here are remembered by Spelling Launcher only (the app's own ignored-words list) and will no longer be flagged as typos in your documents. They are not added to the macOS system dictionary.
                   </p>
                 </div>
 
@@ -602,7 +656,8 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                     value={newLearnedWord}
                     onChange={(e) => setNewLearnedWord(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddLearnedWord()}
-                    placeholder="Add custom word to AppleSpell dictionary..."
+                    aria-label="Word to learn"
+                    placeholder="Add a custom word to learn..."
                     className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
                   />
                   <Button variant="secondary" size="sm" onClick={handleAddLearnedWord} className="text-xs px-3">
@@ -613,7 +668,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                 <div className="space-y-2">
                   {learnedWords.length === 0 ? (
                     <div className="text-center py-6 text-slate-500 text-xs border border-dashed border-slate-800/80 rounded-lg">
-                      No learned words yet. Use "Learn Word" on spelling suggestions in the editor to teach AppleSpell.
+                      No learned words yet. Use "Learn" on spelling suggestions in the editor to add one.
                     </div>
                   ) : (
                     <div className="flex flex-wrap gap-2 pt-1">
@@ -627,6 +682,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                             onClick={() => handleRemoveLearnedWord(word)}
                             className="text-emerald-400/60 hover:text-rose-400"
                             title="Forget word"
+                            aria-label={`Forget word ${word}`}
                           >
                             <X className="w-3 h-3" />
                           </button>

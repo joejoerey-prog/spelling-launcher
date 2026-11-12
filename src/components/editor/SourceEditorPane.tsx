@@ -1,11 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { Edit3, UploadCloud, Loader2 } from 'lucide-react';
 import { Toolbar } from './Toolbar';
-import { editorStore } from '../../core/state/editorStore';
+import { editorStore, INITIAL_SAMPLE_TEXT } from '../../core/state/editorStore';
 import { SentenceNode } from '../../types/document';
+import { DeterministicIssue } from '../../types/suggestions';
 import { extractTextFromDocumentFile } from '../../core/engine/documentExtractor';
 import { rulesStore } from '../../core/state/rulesStore';
 import { isTauri, TauriBridge } from '../../core/bridge/tauriBridge';
+
+const UNDERLINE_BY_CATEGORY = (category: DeterministicIssue['category']): string => {
+  switch (category) {
+    case 'spelling':
+      return 'underline decoration-rose-500 decoration-wavy decoration-2 underline-offset-4';
+    case 'grammar':
+    case 'confusion':
+    case 'repetition':
+      return 'underline decoration-amber-400 decoration-wavy decoration-2 underline-offset-4';
+    case 'wordiness':
+    case 'passive':
+    case 'style':
+    case 'length':
+      return 'underline decoration-sky-400 decoration-dotted decoration-2 underline-offset-4';
+    case 'punctuation':
+    case 'typography':
+      return 'underline decoration-purple-400 decoration-dotted decoration-2 underline-offset-4';
+    default:
+      return 'underline decoration-indigo-400 decoration-solid decoration-2 underline-offset-4';
+  }
+};
+
+/** Splits a sentence into plain and underlined segments. Overlapping ranges fall back to the first. */
+function highlightSegments(text: string, issues: DeterministicIssue[]) {
+  const ranges = issues
+    .filter(
+      (i) =>
+        i.matchStart !== undefined &&
+        i.matchEnd !== undefined &&
+        i.matchEnd > i.matchStart &&
+        // Skip ranges that no longer line up with the text the backend matched (stale or clamped).
+        (i.matchedText === undefined || text.slice(i.matchStart, i.matchEnd) === i.matchedText)
+    )
+    .sort((a, b) => a.matchStart! - b.matchStart!);
+
+  const segments: { text: string; category?: DeterministicIssue['category'] }[] = [];
+  let cursor = 0;
+  for (const i of ranges) {
+    if (i.matchStart! < cursor) continue;
+    if (i.matchStart! > cursor) segments.push({ text: text.slice(cursor, i.matchStart) });
+    segments.push({ text: text.slice(i.matchStart, i.matchEnd), category: i.category });
+    cursor = i.matchEnd!;
+  }
+  if (cursor < text.length) segments.push({ text: text.slice(cursor) });
+  return segments;
+}
 
 export const SourceEditorPane: React.FC = () => {
   const [, setTick] = useState(0);
@@ -34,6 +81,12 @@ export const SourceEditorPane: React.FC = () => {
               setIsDragging(false);
               const paths = event.payload.paths;
               if (paths && paths.length > 0) {
+                if (
+                  editorStore.getState.document.isDirty &&
+                  !(await TauriBridge.confirm('You have unsaved changes. Open the dropped document anyway?'))
+                ) {
+                  return;
+                }
                 const filePath = paths[0];
                 const fileName = filePath.split('/').pop() || 'Document';
                 setIsExtracting(true);
@@ -50,7 +103,7 @@ export const SourceEditorPane: React.FC = () => {
                     });
                   }
                 } catch (err: any) {
-                  alert(`Could not load document:\n${err?.message || err}`);
+                  editorStore.showError(`Could not load document: ${err?.message || err}`);
                 } finally {
                   setIsExtracting(false);
                 }
@@ -93,18 +146,7 @@ export const SourceEditorPane: React.FC = () => {
   };
 
   const handleResetSample = () => {
-    const sample = `# Welcome to Spelling Launcher
-
-Spelling Launcher is your private, local-first sentence writing and rewriting assistant powered by your local Ollama instance and LanguageTool rules.
-
-We recieved alot of constructive feedback on the new launch.
-
-In their was a major question regarding the medication's side affect.
-
-The team met in close proximity due to the fact that we had future plans.
-
-Please review the document ,and let us know your thoughts.`;
-    editorStore.loadDocument(sample, null, 'Sample.md');
+    editorStore.loadDocument(INITIAL_SAMPLE_TEXT, null, 'Sample.md');
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -122,6 +164,12 @@ Please review the document ,and let us know your thoughts.`;
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
+    if (
+      editorStore.getState.document.isDirty &&
+      !(await TauriBridge.confirm('You have unsaved changes. Open the dropped document anyway?'))
+    ) {
+      return;
+    }
 
     setIsExtracting(true);
     try {
@@ -136,7 +184,7 @@ Please review the document ,and let us know your thoughts.`;
         snippet: content.slice(0, 100),
       });
     } catch (err: any) {
-      alert(`Could not extract document "${file.name}":\n${err?.message || err}`);
+      editorStore.showError(`Could not extract document "${file.name}": ${err?.message || err}`);
     } finally {
       setIsExtracting(false);
     }
@@ -228,24 +276,12 @@ Please review the document ,and let us know your thoughts.`;
                   const hasWordiness = issues.some((i) => i.category === 'wordiness' || i.category === 'passive' || i.category === 'style' || i.category === 'length');
                   const hasPunctuation = issues.some((i) => i.category === 'punctuation' || i.category === 'typography');
 
-                  let textStyles = 'cursor-pointer px-1 py-0.5 rounded transition-all duration-150 inline ';
+                  let textStyles =
+                    'cursor-pointer px-1 py-0.5 rounded transition-all duration-150 inline focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ';
                   if (isSelected) {
                     textStyles += 'bg-emerald-500/25 text-emerald-100 ring-2 ring-emerald-500/70 shadow-md ';
-                  } else if (hasSpelling) {
-                    // Red Wavy Underline: Typos & Misspellings
-                    textStyles += 'underline decoration-rose-500 decoration-wavy decoration-2 underline-offset-4 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20 ';
-                  } else if (hasGrammar) {
-                    // Amber Wavy Underline: Grammar & Confusion Homophones
-                    textStyles += 'underline decoration-amber-400 decoration-wavy decoration-2 underline-offset-4 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20 ';
-                  } else if (hasWordiness) {
-                    // Sky Blue Dotted Underline: Wordiness, Redundancy, Plain English, Style
-                    textStyles += 'underline decoration-sky-400 decoration-dotted decoration-2 underline-offset-4 bg-sky-500/10 text-sky-100 hover:bg-sky-500/20 ';
-                  } else if (hasPunctuation) {
-                    // Purple Dotted Underline: Punctuation & Typography
-                    textStyles += 'underline decoration-purple-400 decoration-dotted decoration-2 underline-offset-4 bg-purple-500/10 text-purple-100 hover:bg-purple-500/20 ';
-                  } else if (hasIssues) {
-                    textStyles += 'underline decoration-indigo-400 decoration-solid decoration-2 underline-offset-4 bg-indigo-500/10 text-indigo-100 hover:bg-indigo-500/20 ';
                   } else {
+                    // Only the offending words are underlined; the sentence itself is not tinted.
                     textStyles += 'hover:bg-slate-800/80 text-slate-200 ';
                   }
 
@@ -266,14 +302,31 @@ Please review the document ,and let us know your thoughts.`;
                   return (
                     <span
                       key={sentence.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
                       onClick={() => handleSentenceClick(sentence)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleSentenceClick(sentence);
+                        }
+                      }}
                       className={textStyles}
                       title={issueTooltip}
                     >
                       {hasIssues && !isSelected && (
                         <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 align-middle ${dotColor}`} />
                       )}
-                      {sentence.trimmedText}
+                      {highlightSegments(sentence.trimmedText, issues).map((seg, idx) =>
+                        seg.category ? (
+                          <span key={idx} className={UNDERLINE_BY_CATEGORY(seg.category)}>
+                            {seg.text}
+                          </span>
+                        ) : (
+                          <React.Fragment key={idx}>{seg.text}</React.Fragment>
+                        )
+                      )}
                     </span>
                   );
                 })}

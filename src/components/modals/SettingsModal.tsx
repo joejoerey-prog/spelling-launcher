@@ -5,6 +5,7 @@ import { editorStore } from '../../core/state/editorStore';
 import { TauriBridge } from '../../core/bridge/tauriBridge';
 import { SettingsMigration } from '../../types/database';
 import { Button } from '../ui/Button';
+import { useDialogFocus } from './useDialogFocus';
 
 export interface SettingsModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const current = settingsStore.state;
+  const dialogRef = useDialogFocus(isOpen);
   const [provider, setProvider] = useState(current.provider);
   const [language, setLanguage] = useState<'en_GB' | 'en_US'>(current.language || 'en_GB');
   const [ollamaUrl, setOllamaUrl] = useState(current.ollamaBaseUrl || 'http://localhost:11434/v1');
@@ -106,12 +108,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
+        tabIndex={-1}
+        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Sliders className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-base font-bold text-slate-100">Application Settings</h2>
+            <h2 id="settings-modal-title" className="text-base font-bold text-slate-100">Application Settings</h2>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
@@ -156,10 +165,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {/* Proofreading Language (Native Engine) */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div id="settings-language-label" className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
               Proofreading Language (Native macOS Engine)
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+            </div>
+            <div role="group" aria-labelledby="settings-language-label" className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setLanguage('en_GB')}
@@ -189,10 +198,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {/* Rewrite Provider Selection */}
           <div className="space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div id="settings-provider-label" className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
               Rewrite Engine Provider
-            </label>
-            <div className="grid grid-cols-3 gap-2">
+            </div>
+            <div role="group" aria-labelledby="settings-provider-label" className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setProvider('ollama')}
@@ -258,8 +267,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-400">Ollama API URL</label>
+                <label htmlFor="settings-ollama-url" className="text-xs text-slate-400">Ollama API URL</label>
                 <input
+                  id="settings-ollama-url"
                   type="text"
                   value={ollamaUrl}
                   onChange={(e) => setOllamaUrl(e.target.value)}
@@ -269,9 +279,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-slate-400">Selected Model</label>
+                <label htmlFor="settings-ollama-model" className="text-xs text-slate-400">Selected Model</label>
                 {availableModels.length > 0 ? (
                   <select
+                    id="settings-ollama-model"
                     value={ollamaModel}
                     onChange={(e) => setOllamaModel(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500 cursor-pointer"
@@ -284,6 +295,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   </select>
                 ) : (
                   <input
+                    id="settings-ollama-model"
                     type="text"
                     value={ollamaModel}
                     onChange={(e) => setOllamaModel(e.target.value)}
@@ -327,11 +339,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {provider === 'openai' && (
             <div className="space-y-3 p-4 bg-slate-950/60 rounded-xl border border-slate-800">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                <label htmlFor="settings-api-key" className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
                   <Key className="w-3.5 h-3.5 text-sky-400" />
                   API Key (Stored locally in SQLite)
                 </label>
                 <input
+                  id="settings-api-key"
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
@@ -342,8 +355,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-400">Base URL</label>
+                  <label htmlFor="settings-base-url" className="text-xs font-medium text-slate-400">Base URL</label>
                   <input
+                    id="settings-base-url"
                     type="text"
                     value={baseUrl}
                     onChange={(e) => setBaseUrl(e.target.value)}
@@ -352,8 +366,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-400">Model</label>
+                  <label htmlFor="settings-model" className="text-xs font-medium text-slate-400">Model</label>
                   <input
+                    id="settings-model"
                     type="text"
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
@@ -367,9 +382,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {/* Linguistic Check Toggles */}
           <div className="space-y-3">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
               Deterministic Linguistic Checks
-            </label>
+            </div>
 
             <div className="space-y-2">
               <label className="flex items-center justify-between p-2.5 rounded-lg bg-slate-850 border border-slate-800 cursor-pointer hover:bg-slate-800">

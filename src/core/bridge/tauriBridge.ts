@@ -58,6 +58,27 @@ export const TauriBridge = {
     return null;
   },
 
+  /** Asks where to save; outside Tauri there is no dialog, so the suggested name is used as the storage key. */
+  async chooseSavePath(defaultName: string): Promise<string | null> {
+    if (isTauri()) {
+      const { save } = await import('@tauri-apps/plugin-dialog');
+      return save({
+        defaultPath: defaultName,
+        filters: [{ name: 'Markdown / Text', extensions: ['md', 'markdown', 'txt', 'text'] }],
+      });
+    }
+    return defaultName;
+  },
+
+  /** Native confirm dialog in Tauri, window.confirm in the browser. */
+  async confirm(message: string, title: string = 'Spelling Launcher'): Promise<boolean> {
+    if (isTauri()) {
+      const { ask } = await import('@tauri-apps/plugin-dialog');
+      return ask(message, { title, kind: 'warning' });
+    }
+    return window.confirm(message);
+  },
+
   async readDocument(filePath: string): Promise<FileOperationResult> {
     if (isTauri()) {
       const { invoke } = await import('@tauri-apps/api/core');
@@ -65,7 +86,7 @@ export const TauriBridge = {
     } else {
       // Browser fallback: mock reading
       const docs = getMockItem<Record<string, string>>('docs', {});
-      const content = docs[filePath] || '# Welcome to WordCraft\n\nWordCraft is your private, local-first writing and rewriting assistant.\n\nIn order to improve this sentence, click on it and choose a rewrite.\n\nThe report was submitted by the team yesterday.\n\nThis is a very unique approach for the the user.';
+      const content = docs[filePath] || '# Welcome to Spelling Launcher\n\nSpelling Launcher is your private, local-first writing and rewriting assistant.\n\nIn order to improve this sentence, click on it and choose a rewrite.\n\nThe report was submitted by the team yesterday.\n\nThis is a very unique approach for the the user.';
       return {
         success: true,
         path: filePath,
@@ -128,7 +149,7 @@ export const TauriBridge = {
           title: 'Sample Essay & Rewriting Guide',
           word_count: 52,
           last_modified: 'Just now',
-          snippet: 'WordCraft is your private, local-first writing assistant...',
+          snippet: 'Spelling Launcher is your private, local-first writing assistant...',
         },
       ]);
     }
@@ -201,7 +222,7 @@ export const TauriBridge = {
     } else {
       return getMockItem<IgnoredTerm[]>('ignored_terms', [
         { id: 1, term: 'kubernetes', created_at: '2026-09-02' },
-        { id: 2, term: 'wordcraft', created_at: '2026-09-02' },
+        { id: 2, term: 'spellinglauncher', created_at: '2026-09-02' },
       ]);
     }
   },
@@ -307,6 +328,7 @@ export const TauriBridge = {
       const { invoke } = await import('@tauri-apps/api/core');
       return invoke('learn_word', { word });
     }
+    await TauriBridge.addIgnored(word);
   },
 
   async ignoreWord(word: string): Promise<void> {
@@ -314,6 +336,7 @@ export const TauriBridge = {
       const { invoke } = await import('@tauri-apps/api/core');
       return invoke('ignore_word', { word });
     }
+    await TauriBridge.addIgnored(word);
   },
 };
 

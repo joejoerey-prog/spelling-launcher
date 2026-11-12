@@ -256,28 +256,23 @@ export function parseDocument(rawContent: string, filePath: string | null = null
 }
 
 /**
- * Reassembles raw document content from modified sentence nodes.
+ * Reassembles raw document content from (possibly modified) sentence nodes.
+ * Paragraph nodes already include blank-line nodes, so they are joined with a single newline,
+ * and the original whitespace between sentences is preserved.
  */
 export function reassembleDocument(document: DocumentModel): string {
-  const renderedParagraphs = document.paragraphs.map((p) => {
-    if (p.isCodeBlock || p.isBlank) {
-      return p.rawText;
-    }
-
-    if (p.sentences.length === 0) {
-      return p.rawText;
-    }
-
-    return p.sentences
-      .map((s, idx) => {
-        const prefix = idx === 0 && s.prefix ? s.prefix : '';
-        const space = idx > 0 && !s.text.startsWith(' ') && !s.text.startsWith('\n') ? ' ' : '';
-        return `${prefix}${space}${s.text.trim()}`;
-      })
-      .join('');
-  });
-
-  return renderedParagraphs.join('\n\n');
+  return document.paragraphs
+    .map((p) => {
+      if (p.isCodeBlock || p.isBlank || p.sentences.length === 0) return p.rawText;
+      let out = '';
+      let cursor = 0;
+      for (const s of p.sentences) {
+        out += p.rawText.slice(cursor, s.startOffset) + s.text;
+        cursor = s.endOffset;
+      }
+      return out + p.rawText.slice(cursor);
+    })
+    .join('\n');
 }
 
 /**

@@ -6,9 +6,11 @@ export interface ToastProps {
   type?: 'success' | 'error' | 'info';
   onDismiss: () => void;
   onRetry?: () => void;
+  /** Render inline so a parent container can stack several toasts. */
+  stacked?: boolean;
 }
 
-export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onDismiss, onRetry }) => {
+export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onDismiss, onRetry, stacked }) => {
   useEffect(() => {
     if (message && type !== 'error') {
       const timer = setTimeout(() => {
@@ -27,7 +29,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onDismiss,
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 max-w-md animate-in fade-in slide-in-from-bottom-3 duration-200">
+    <div className={`${stacked ? '' : 'fixed bottom-6 right-6 z-50'} max-w-md animate-in fade-in slide-in-from-bottom-3 duration-200`}>
       <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-lg ${bgStyles[type]}`}>
         {type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
         {type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
@@ -40,7 +42,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onDismiss,
             <RefreshCw className="w-3 h-3" /> Retry
           </button>
         )}
-        <button onClick={onDismiss} className="p-1 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/10 transition-colors">
+        <button onClick={onDismiss} aria-label="Dismiss notification" className="p-1 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/10 transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>

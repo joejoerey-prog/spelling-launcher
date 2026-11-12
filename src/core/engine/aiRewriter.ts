@@ -124,7 +124,7 @@ export async function rewriteSelectedPassage(
     const localVariations = generateLocalRewrites(sentenceId, sentenceText, options.tone, options.length);
     return {
       options: localVariations,
-      error: `Ollama Notice: ${err?.message || err}. Used local heuristic rewrite.`,
+      error: `${provider === 'ollama' ? 'Ollama' : 'Rewrite provider'} notice: ${err?.message || err}. Used local heuristic rewrite.`,
       isAi: false,
     };
   }

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { X, Download, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Download, Check, AlertCircle } from 'lucide-react';
 import { editorStore } from '../../core/state/editorStore';
 import { TauriBridge } from '../../core/bridge/tauriBridge';
 import { Button } from '../ui/Button';
+import { useDialogFocus } from './useDialogFocus';
 
 export interface ExportModalProps {
   isOpen: boolean;
@@ -15,7 +16,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
   const [filename, setFilename] = useState(initialBaseName);
   const [format, setFormat] = useState<'md' | 'txt'>('md');
   const [isExporting, setIsExporting] = useState(false);
-  const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [exportMessage, setExportMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  const dialogRef = useDialogFocus(isOpen);
+
+  // Re-derive the name from the current document every time the modal opens.
+  useEffect(() => {
+    if (isOpen) {
+      setFilename(editorStore.getState.document.fileName.replace(/\.[^/.]+$/, '') || 'document');
+      setExportMessage(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -30,13 +40,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
       const content = state.document.rawContent;
       const res = await TauriBridge.exportDocument(sanitizedName, content);
       if (res.success) {
-        setExportMessage(`Successfully exported: ${sanitizedName}`);
+        setExportMessage({ text: `Successfully exported: ${sanitizedName}`, isError: false });
         setTimeout(() => {
           onClose();
         }, 1500);
+      } else {
+        setExportMessage({ text: `Export error: ${res.message || 'export failed'}`, isError: true });
       }
     } catch (e: any) {
-      setExportMessage(`Export error: ${e?.message || e}`);
+      setExportMessage({ text: `Export error: ${e?.message || e}`, isError: true });
     } finally {
       setIsExporting(false);
     }
@@ -44,12 +56,19 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="export-modal-title"
+        tabIndex={-1}
+        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col outline-none"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Download className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-base font-bold text-slate-100">Export Document</h2>
+            <h2 id="export-modal-title" className="text-base font-bold text-slate-100">Export Document</h2>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
@@ -59,10 +78,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         {/* Body */}
         <div className="p-6 space-y-4 text-sm text-slate-300">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <label htmlFor="export-filename" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
               File Name
             </label>
             <input
+              id="export-filename"
               type="text"
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
@@ -72,10 +92,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div id="export-format-label" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
               Format
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+            </div>
+            <div role="group" aria-labelledby="export-format-label" className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setFormat('md')}
@@ -111,9 +131,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
           </div>
 
           {exportMessage && (
-            <div className="p-3 bg-emerald-950/60 border border-emerald-500/30 text-emerald-200 text-xs rounded-lg flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>{exportMessage}</span>
+            <div
+              role={exportMessage.isError ? 'alert' : 'status'}
+              className={`p-3 border text-xs rounded-lg flex items-center gap-2 ${
+                exportMessage.isError
+                  ? 'bg-rose-950/60 border-rose-500/30 text-rose-200'
+                  : 'bg-emerald-950/60 border-emerald-500/30 text-emerald-200'
+              }`}
+            >
+              {exportMessage.isError ? (
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              ) : (
+                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+              )}
+              <span>{exportMessage.text}</span>
             </div>
           )}
         </div>

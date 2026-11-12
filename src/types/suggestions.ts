@@ -28,6 +28,8 @@ export interface DeterministicIssue {
   ruleId?: string;
   rawStartOffset?: number;
   rawEndOffset?: number;
+  /** Text the backend matched at rawStartOffset..rawEndOffset; used to detect stale offsets before editing. */
+  matchedText?: string;
   replacement?: string;
   suggestions?: string[];
 }

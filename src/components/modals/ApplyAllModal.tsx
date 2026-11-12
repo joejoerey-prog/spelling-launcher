@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { X, CheckCheck, ShieldCheck, ArrowRight } from 'lucide-react';
 import { editorStore } from '../../core/state/editorStore';
 import { Button } from '../ui/Button';
+import { useDialogFocus } from './useDialogFocus';
 import { DeterministicIssue } from '../../types/suggestions';
 
 export interface ApplyAllModalProps {
@@ -11,6 +12,7 @@ export interface ApplyAllModalProps {
 
 export const ApplyAllModal: React.FC<ApplyAllModalProps> = ({ isOpen, onClose }) => {
   const state = editorStore.getState;
+  const dialogRef = useDialogFocus(isOpen);
 
   // Gather all apply-all eligible issues with replacements across all sentences
   const eligibleIssues = useMemo(() => {
@@ -52,7 +54,14 @@ export const ApplyAllModal: React.FC<ApplyAllModalProps> = ({ isOpen, onClose })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="apply-all-modal-title"
+        tabIndex={-1}
+        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -60,7 +69,7 @@ export const ApplyAllModal: React.FC<ApplyAllModalProps> = ({ isOpen, onClose })
               <CheckCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+              <h2 id="apply-all-modal-title" className="text-base font-bold text-slate-100 flex items-center gap-2">
                 Apply All Safe Fixes
                 <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
                   {eligibleIssues.length} {eligibleIssues.length === 1 ? 'fix' : 'fixes'}
@@ -157,7 +166,7 @@ export const ApplyAllModal: React.FC<ApplyAllModalProps> = ({ isOpen, onClose })
 
                       <div className="flex items-center gap-2 shrink-0 text-xs font-mono">
                         <span className="px-2 py-1 rounded bg-rose-950/40 text-rose-300 line-through border border-rose-800/30">
-                          {issue.originalText.slice(issue.matchStart, issue.matchEnd) || 'original'}
+                          {issue.matchedText || issue.originalText.slice(issue.matchStart, issue.matchEnd) || 'original'}
                         </span>
                         <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
                         <span className="px-2 py-1 rounded bg-emerald-950/40 text-emerald-300 font-bold border border-emerald-800/30">

@@ -13,7 +13,7 @@ import { Toast } from './components/ui/Toast';
 import { editorStore } from './core/state/editorStore';
 import { rulesStore } from './core/state/rulesStore';
 import { settingsStore } from './core/state/settingsStore';
-import { TauriBridge } from './core/bridge/tauriBridge';
+import { styleStore } from './core/state/styleStore';
 
 export const App: React.FC = () => {
   const [, setTick] = useState(0);
@@ -29,12 +29,21 @@ export const App: React.FC = () => {
     const unSubSettings = settingsStore.subscribe(() => setTick((t) => t + 1));
 
     // Initial fetch of persisted rules & settings
-    settingsStore.load();
-    rulesStore.fetchAll();
+    // Re-check once everything that influences the check (language, suppressed rules, learned words) is loaded.
+    Promise.all([settingsStore.load(), styleStore.load(), rulesStore.fetchAll()]).then(() => {
+      editorStore.refreshAllIssues();
+    });
 
     // Keyboard Shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
       const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+
+      // Let text inputs keep their native undo/redo.
+      const inInput = e.target instanceof HTMLInputElement;
+
+      if (isCmdOrCtrl && (e.key === 'z' || e.key === 'y') && inInput) {
+        return;
+      }
 
       if (isCmdOrCtrl && e.key === 'z') {
         e.preventDefault();
@@ -48,11 +57,7 @@ export const App: React.FC = () => {
         editorStore.redo();
       } else if (isCmdOrCtrl && e.key === 's') {
         e.preventDefault();
-        const doc = editorStore.getState.document;
-        const targetPath = doc.filePath || doc.fileName || 'document.md';
-        TauriBridge.saveDocument(targetPath, doc.rawContent, true).then((res) => {
-          if (res.success) editorStore.markSaved(targetPath);
-        });
+        editorStore.saveCurrentDocument();
       } else if (e.key === 'Escape') {
         setIsSettingsOpen(false);
         setIsRulesOpen(false);
@@ -74,7 +79,7 @@ export const App: React.FC = () => {
   const state = editorStore.getState;
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-900 text-slate-100 overflow-hidden font-sans select-none">
+    <div className="h-screen w-screen flex flex-col bg-slate-900 text-slate-100 overflow-hidden font-sans">
       {/* Header */}
       <AppHeader
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -112,17 +117,21 @@ export const App: React.FC = () => {
       />
 
       {/* Success & Error Feedback Toasts */}
-      <Toast
-        message={state.successMessage}
-        type="success"
-        onDismiss={() => editorStore.clearMessages()}
-      />
-      <Toast
-        message={state.error}
-        type="error"
-        onDismiss={() => editorStore.clearMessages()}
-        onRetry={() => editorStore.generateRewritesForSelected()}
-      />
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 max-w-md">
+        <Toast
+          stacked
+          message={state.successMessage}
+          type="success"
+          onDismiss={() => editorStore.clearSuccess()}
+        />
+        <Toast
+          stacked
+          message={state.error}
+          type="error"
+          onDismiss={() => editorStore.clearError()}
+          onRetry={state.errorSource === 'rewrite' ? () => editorStore.generateRewritesForSelected() : undefined}
+        />
+      </div>
     </div>
   );
 };

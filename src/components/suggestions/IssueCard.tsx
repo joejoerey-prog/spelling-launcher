@@ -77,11 +77,11 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
   };
 
   const handleLearnWord = () => {
-    if (issue.matchStart !== undefined && issue.matchEnd !== undefined) {
-      const match = issue.originalText.slice(issue.matchStart, issue.matchEnd).trim();
-      if (match) {
-        editorStore.learnWord(match);
-      }
+    const match =
+      issue.matchedText ??
+      (issue.matchStart !== undefined && issue.matchEnd !== undefined ? issue.originalText.slice(issue.matchStart, issue.matchEnd) : '');
+    if (match.trim()) {
+      editorStore.learnWord(match.trim());
     }
   };
 
@@ -130,7 +130,7 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
               variant="ghost"
               size="sm"
               onClick={handleLearnWord}
-              title="Learn word in macOS dictionary"
+              title="Add this word to your learned words (Spelling Launcher only)"
               className="text-[11px] px-2 py-1 text-slate-400 hover:text-slate-200"
             >
               <BookOpen className="w-3 h-3 mr-1" /> Learn

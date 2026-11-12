@@ -15,7 +15,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onToggleRawMode,
 }) => {
   return (
-    <div className="h-10 border-b border-slate-800 bg-slate-900/50 px-3 flex items-center justify-between text-xs text-slate-400 shrink-0">
+    <div className="h-10 border-b border-slate-800 bg-slate-900/50 px-3 flex items-center justify-between text-xs text-slate-400 shrink-0 select-none">
       <div className="flex items-center gap-1">
         <button
           onClick={() => onInsertMarkdown('# ')}
