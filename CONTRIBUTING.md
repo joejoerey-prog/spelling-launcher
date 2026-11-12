@@ -9,7 +9,7 @@ Please review the following guidelines before submitting issues or pull requests
 ## 1. Core Architectural Tenets
 
 Before proposing changes, please be mindful of our non-negotiable architectural principles:
-1. **Single Engine Authority (Strategy H)**: All spelling checks and deterministic linguistic rules live exclusively within the pure-Rust `crates/spellcore` library and `crates/spellcheck-cli`. The TypeScript/React layers and Raycast extension are presentation and IPC layers only; they must never implement competing or fallback regex rules.
+1. **Single Engine Authority (Strategy H)**: All spelling checks and deterministic linguistic rules live exclusively within the pure-Rust `crates/spellcore` library and `crates/spellcheck-cli`. The TypeScript/React layers are presentation and IPC layers only; they must never implement competing or fallback regex rules.
 2. **Zero Cloud Telemetry**: Spelling Launcher operates completely offline. No tracking, telemetry, or external API calls are permitted for spellchecking. Optional tone rewrites communicate solely with a locally hosted Ollama server.
 3. **Deterministic Mechanics**: Grammatical and mechanical corrections (pronoun capitalisation, time formatting, cardinal numbers, commercial genitives) must be deterministic, auditable, and verified by unit tests.
 4. **Target Architecture**: The native AppKit `NSSpellChecker` integration specifically targets **macOS on Apple Silicon (`aarch64-apple-darwin`)**.
@@ -67,16 +67,6 @@ npm test
 
 # Run tests in watch mode
 npm run test:watch
-```
-
-### Raycast Binary Drift Verification
-If you modify `crates/spellcore` or `crates/spellcheck-cli`, you must re-sync the CLI binary to the companion Raycast extension and confirm zero drift:
-```bash
-# Synchronise binary and version manifest
-./scripts/sync-raycast-cli.sh
-
-# Confirm zero drift
-./scripts/check-drift.sh
 ```
 
 ---

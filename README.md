@@ -19,34 +19,27 @@ Traditional writing assistants require sending your private documents and keystr
 
 ## 🏗️ Architecture (Strategy H: Single Shared Core)
 
-Spelling Launcher enforces **Strategy H**: a single, authoritative Rust core (`crates/spellcore`) shared seamlessly between the Desktop application and the companion Raycast extension.
+Spelling Launcher enforces **Strategy H**: a single, authoritative Rust core (`crates/spellcore`) shared by the Desktop application and the standalone `spellcheck-cli` binary.
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                      Spelling Launcher Ecosystem                       │
-└────────────────────────────────────┬───────────────────────────────────┘
-                                     │
-         ┌───────────────────────────┴───────────────────────────┐
-         ▼                                                       ▼
-┌───────────────────────────────┐               ┌───────────────────────────────┐
-│   Spelling Launcher Desktop   │               │   Spelling Launcher Raycast   │
-│      (wordtune-personal)      │               │  (spelling-launcher-raycast)  │
-├───────────────────────────────┤               ├───────────────────────────────┤
-│ • Three-Pane Editor & Diffs   │               │ • Global System-Wide Hotkey   │
-│ • Full Document Statistics    │               │ • 1-Click Quick Polish HUD    │
-│ • Local SQLite Persistence    │               │ • Paste-Back into Any App     │
-│ • React 18 + Tauri 2 Runtime  │               │ • Sub-30ms Proofreading       │
-└───────────────┬───────────────┘               └───────────────┬───────────────┘
-                │ (IPC / Rust FFI)                              │ (Subprocess CLI)
-                ▼                                               ▼
+┌───────────────────────────────┐
+│   Spelling Launcher Desktop   │
+├───────────────────────────────┤
+│ • Three-Pane Editor & Diffs   │
+│ • Full Document Statistics    │
+│ • Local SQLite Persistence    │
+│ • React 18 + Tauri 2 Runtime  │
+└───────────────┬───────────────┘
+                │ (IPC / Rust FFI)
+                ▼
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                      Authoritative Rust Core Workspace                        │
 │                                                                               │
 │  ┌─────────────────────────┐               ┌───────────────────────────────┐  │
 │  │   crates/spellcheck-cli │               │       crates/spellcore        │  │
 │  │   • Headless CLI tool   │◄──────────────┤   • Pure-Rust rule engine     │  │
-│  │   • Zero-drift version  │  statically   │   • AST Masker (Code/URLs)    │  │
-│  │     manifest handshake  │    links      │   • LRU Cache (50k words)     │  │
+│  │   • Version manifest    │  statically   │   • AST Masker (Code/URLs)    │  │
+│  │     handshake           │    links      │   • LRU Cache (50k words)     │  │
 │  └─────────────────────────┘               └───────────────┬───────────────┘  │
 │                                                            │                  │
 │                                                            ▼                  │
@@ -164,9 +157,6 @@ cargo test --workspace
 
 # 2. Run React & Vitest component test suite
 npm test
-
-# 3. Verify CLI and Raycast binary drift
-./scripts/check-drift.sh
 ```
 
 ---
