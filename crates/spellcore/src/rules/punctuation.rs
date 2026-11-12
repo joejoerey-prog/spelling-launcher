@@ -1720,7 +1720,7 @@ fn check_terminal_punctuation(text: &str, mode: CheckMode, issues: &mut Vec<Issu
     let last_clause = if let Some(caps) = INTERROGATIVE_CLAUSE_BOUNDARY.captures_iter(trimmed).last() {
         let mat = caps.get(0).unwrap();
         &trimmed[mat.end()..]
-    } else if let Some(idx) = trimmed.rfind(|c: char| c == '.' || c == '?' || c == '!') {
+    } else if let Some(idx) = trimmed.rfind(['.', '?', '!']) {
         &trimmed[idx + 1..]
     } else {
         trimmed

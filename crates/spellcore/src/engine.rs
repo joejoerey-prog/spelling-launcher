@@ -104,7 +104,7 @@ impl SpellcoreEngine {
         self.check(text, language, tag, crate::types::CheckMode::Document)
     }
 
-    /// Check a short text fragment (e.g. Raycast selection) with fragment-specific heuristics.
+    /// Check a short text fragment (e.g. a selected passage) with fragment-specific heuristics.
     pub fn check_fragment(&self, text: &str, language: &str, tag: isize) -> Vec<Issue> {
         self.check(text, language, tag, crate::types::CheckMode::Fragment)
     }

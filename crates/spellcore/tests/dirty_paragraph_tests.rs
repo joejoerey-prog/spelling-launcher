@@ -18,10 +18,7 @@ fn main() {
     let sample_paragraph = "The development of modern literature in the nineteenth century reflected deep social changes across Britain and Europe. Writers observed the rise of industrial cities, the expansion of railways, and the shifting dynamics between traditional rural communities and emerging urban centres. In their essays and novels, they explored human psychology, moral dilemmas, and philosophical inquiries with unprecedented depth and precision, creating enduring works that continue to inform contemporary thought.";
 
     let num_paras = 760; // 760 * 66 = 50,160 words
-    let mut paragraphs = Vec::with_capacity(num_paras);
-    for _ in 0..num_paras {
-        paragraphs.push(sample_paragraph);
-    }
+    let paragraphs = vec![sample_paragraph; num_paras];
     let full_doc = paragraphs.join("\n\n");
     let total_words = full_doc.split_whitespace().count();
     println!("Constructed document with {} words across {} paragraphs.", total_words, num_paras);

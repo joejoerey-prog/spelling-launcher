@@ -83,7 +83,7 @@ fn run_audit_dir(dir_str: &str, language: &str) {
         if let Ok(content) = fs::read_to_string(file) {
             let words = content.split_whitespace().count();
             total_words += words;
-            total_sentences += content.split(|c| c == '.' || c == '!' || c == '?').count();
+            total_sentences += content.split(['.', '!', '?']).count();
 
             let issues = engine.check(&content, language, tag, CheckMode::Document);
             for issue in issues {
@@ -101,7 +101,7 @@ fn run_audit_dir(dir_str: &str, language: &str) {
     println!("----------------------------------------------------------------------");
 
     let mut sorted_rules: Vec<(String, usize)> = rule_counts.into_iter().collect();
-    sorted_rules.sort_by(|a, b| b.1.cmp(&a.1));
+    sorted_rules.sort_by_key(|a| std::cmp::Reverse(a.1));
 
     for (rule_id, count) in sorted_rules {
         let rate_per_1k = if total_words > 0 {

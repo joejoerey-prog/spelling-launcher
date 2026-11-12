@@ -63,7 +63,7 @@ fn main() {
     let doc_p99 = percentile(&doc_latencies_ms, 99.0);
     let doc_mean = doc_latencies_ms.iter().sum::<f64>() / (doc_latencies_ms.len() as f64);
 
-    // 3. Measure In-Process Fragment-Mode Check Latency (Raycast Selection Flow)
+    // 3. Measure In-Process Fragment-Mode Check Latency (Selection Flow)
     let mut frag_latencies_ms: Vec<f64> = Vec::with_capacity(sentences.len());
     for s in &sentences {
         let start = Instant::now();
@@ -118,7 +118,7 @@ fn main() {
     let dirty_status = if dirty_p95 <= 30.0 { "PASS" } else { "FAIL" };
 
     println!("{:<32} | {:>7.2} ms | {:>7.2} ms | {:>7.2} ms | <= 30 ms  | {:<8}", "Document Mode (Sentence Check)", doc_p50, doc_p95, doc_p99, doc_status);
-    println!("{:<32} | {:>7.2} ms | {:>7.2} ms | {:>7.2} ms | <= 30 ms  | {:<8}", "Fragment Mode (Raycast Flow)", frag_p50, frag_p95, frag_p99, frag_status);
+    println!("{:<32} | {:>7.2} ms | {:>7.2} ms | {:>7.2} ms | <= 30 ms  | {:<8}", "Fragment Mode (Selection Flow)", frag_p50, frag_p95, frag_p99, frag_status);
     println!("{:<32} | {:>7.2} ms | {:>7.2} ms | {:>7.2} ms | <= 30 ms  | {:<8}", "Dirty Paragraph (50k-word doc)", dirty_p50, dirty_p95, dirty_p99, dirty_status);
     println!("==========================================================================================");
     println!("Summary: Mean Document Latency = {:.2} ms | Mean Fragment Latency = {:.2} ms", doc_mean, frag_mean);

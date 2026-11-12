@@ -53,11 +53,11 @@ fn damerau_levenshtein(a: &str, b: &str) -> usize {
     let n = b_chars.len();
     let mut dp = vec![vec![0; n + 1]; m + 1];
 
-    for i in 0..=m {
-        dp[i][0] = i;
+    for (i, row) in dp.iter_mut().enumerate() {
+        row[0] = i;
     }
-    for j in 0..=n {
-        dp[0][j] = j;
+    for (j, cell) in dp[0].iter_mut().enumerate() {
+        *cell = j;
     }
 
     for i in 1..=m {
@@ -121,7 +121,7 @@ where
         let ctx_ptr = Box::into_raw(ctx) as *mut std::ffi::c_void;
 
         unsafe {
-            let queue = &raw mut _dispatch_main_q as *mut std::ffi::c_void;
+            let queue = &raw mut _dispatch_main_q;
             dispatch_async_f(queue, ctx_ptr, trampoline::<F, R>);
         }
 
@@ -198,7 +198,7 @@ impl Checker for NativeChecker {
             let mut proper_noun_counts: BTreeMap<String, usize> = BTreeMap::new();
             for word in text_string.split_whitespace() {
                 let clean: String = word.trim_matches(|c: char| !c.is_alphabetic()).to_string();
-                if clean.len() > 1 && clean.chars().next().map_or(false, |c| c.is_uppercase()) {
+                if clean.len() > 1 && clean.chars().next().is_some_and(|c| c.is_uppercase()) {
                     *proper_noun_counts.entry(clean).or_insert(0) += 1;
                 }
             }
@@ -266,7 +266,7 @@ impl Checker for NativeChecker {
 
                     // Proper noun heuristics (Fix B & Defect 1)
                     let clean_sub: String = sub.trim_matches(|c: char| !c.is_alphabetic()).to_string();
-                    let is_capitalized = clean_sub.chars().next().map_or(false, |c| c.is_uppercase());
+                    let is_capitalized = clean_sub.chars().next().is_some_and(|c| c.is_uppercase());
 
                     let guesses = checker.guessesForWordRange_inString_language_inSpellDocumentWithTag(
                         r_range,
