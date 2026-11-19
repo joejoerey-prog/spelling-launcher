@@ -17,9 +17,9 @@ This is a very unique approach for the the user.`;
     render(<App />);
 
     // 1. Verify 3 panes are present
-    expect(screen.getByText('Source Document')).toBeInTheDocument();
-    expect(screen.getByText('Suggestions & Rewrites')).toBeInTheDocument();
-    expect(screen.getByText('Accepted Result Preview')).toBeInTheDocument();
+    expect(screen.getByText('Document')).toBeInTheDocument();
+    expect(screen.getByText('Suggestions')).toBeInTheDocument();
+    expect(screen.getByText('Result')).toBeInTheDocument();
 
     // 2. Select the sentence with passive voice and filler in the source editor pane
     const targetSentences = screen.getAllByText(/In order to make a decision/i);
@@ -28,8 +28,8 @@ This is a very unique approach for the the user.`;
 
     // 3. Verify Suggestion Pane activates and displays Generate Rewrites button
     await waitFor(() => {
-      expect(screen.getByText('Active Sentence')).toBeInTheDocument();
-      expect(screen.getByText('Rewrite Options')).toBeInTheDocument();
+      expect(screen.getByText('Selected sentence')).toBeInTheDocument();
+      expect(screen.getByText('Rewrites')).toBeInTheDocument();
     });
 
     const generateBtn = screen.getByRole('button', { name: /generate rewrites/i });
@@ -67,13 +67,13 @@ This is a very unique approach for the the user.`;
     });
 
     // 8. Open Export modal
-    const exportButton = screen.getByTitle('Export Document (⌘E)');
+    const exportButton = screen.getByTitle('Export document (⌘E)');
     fireEvent.click(exportButton);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Export Document/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Export document/i })).toBeInTheDocument();
       expect(screen.getByText('Markdown (.md)')).toBeInTheDocument();
-      expect(screen.getByText('Plain Text (.txt)')).toBeInTheDocument();
+      expect(screen.getByText('Plain text (.txt)')).toBeInTheDocument();
     });
 
     // 9. Close Export modal
@@ -81,7 +81,7 @@ This is a very unique approach for the the user.`;
     fireEvent.click(cancelExport);
 
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /Export Document/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /Export document/i })).not.toBeInTheDocument();
     });
   });
 });

@@ -106,7 +106,7 @@ describe('configured shortcuts drive the app', () => {
     expect(save).not.toHaveBeenCalled();
     fireEvent.keyDown(document.body, { code: 'KeyS', key: 'ß', ctrlKey: true, altKey: true });
     expect(save).toHaveBeenCalledTimes(1);
-    expect(screen.getByTitle('Save Document (⌃⌥S)')).toBeTruthy();
+    expect(screen.getByTitle('Save document (⌃⌥S)')).toBeTruthy();
   });
 
   it('a cleared shortcut does nothing, and default shortcuts open dialogs and toggle raw view', async () => {
@@ -117,7 +117,7 @@ describe('configured shortcuts drive the app', () => {
     expect(undo).not.toHaveBeenCalled();
 
     fireEvent.keyDown(document.body, { code: 'Comma', key: ',', metaKey: true });
-    expect(screen.getByRole('dialog', { name: 'Application Settings' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeTruthy();
     fireEvent.keyDown(window, { key: 'Escape' });
 
     fireEvent.keyDown(document.body, { code: 'KeyR', key: 'r', metaKey: true, shiftKey: true });

@@ -25,19 +25,19 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onDismiss,
   const bgStyles = {
     success: 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200',
     error: 'bg-rose-950/90 border-rose-500/40 text-rose-200',
-    info: 'bg-slate-800/95 border-slate-700 text-slate-200',
+    info: 'bg-slate-800/95 border-white/10 text-slate-200',
   };
 
   return (
     <div className={`${stacked ? '' : 'fixed bottom-6 right-6 z-50'} max-w-md animate-in fade-in slide-in-from-bottom-3 duration-200`}>
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-lg ${bgStyles[type]}`}>
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl ${bgStyles[type]}`}>
         {type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
         {type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
         <span className="text-sm font-medium flex-1">{message}</span>
         {onRetry && (
           <button
             onClick={onRetry}
-            className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-500/40 transition-colors"
+            className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-500/40 transition-colors"
           >
             <RefreshCw className="w-3 h-3" /> Retry
           </button>

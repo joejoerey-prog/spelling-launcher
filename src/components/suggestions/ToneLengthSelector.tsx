@@ -29,11 +29,11 @@ export const ToneLengthSelector: React.FC = () => {
   };
 
   return (
-    <div className="space-y-2 p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-xs">
+    <div className="space-y-2 p-3 bg-slate-850 rounded-xl border border-white/10 text-xs">
       {/* Tone selection */}
       <div className="flex items-center justify-between gap-1 flex-wrap">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-          Tone:
+        <span className="text-xs font-medium text-slate-400">
+          Tone
         </span>
         <div className="flex items-center gap-1 flex-wrap">
           {tones.map((t) => {
@@ -42,10 +42,10 @@ export const ToneLengthSelector: React.FC = () => {
               <button
                 key={t.id}
                 onClick={() => handleToneSelect(t.id)}
-                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
+                className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
                   active
-                    ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/20'
-                    : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'bg-slate-800 text-slate-300 hover:text-slate-100 hover:bg-slate-700'
                 }`}
               >
                 {t.label}
@@ -57,8 +57,8 @@ export const ToneLengthSelector: React.FC = () => {
 
       {/* Length selection */}
       <div className="flex items-center justify-between gap-1">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-          Length:
+        <span className="text-xs font-medium text-slate-400">
+          Length
         </span>
         <div className="flex items-center gap-1">
           {lengths.map((l) => {
@@ -67,10 +67,10 @@ export const ToneLengthSelector: React.FC = () => {
               <button
                 key={l.id}
                 onClick={() => handleLengthSelect(l.id)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                   active
-                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20'
-                    : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'bg-slate-800 text-slate-300 hover:text-slate-100 hover:bg-slate-700'
                 }`}
               >
                 {l.label}

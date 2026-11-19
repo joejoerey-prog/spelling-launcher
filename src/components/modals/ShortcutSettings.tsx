@@ -71,7 +71,7 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ value, onCha
   return (
     <div className="space-y-3" role="group" aria-labelledby="shortcuts-heading">
       <div className="flex items-center justify-between">
-        <div id="shortcuts-heading" className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+        <div id="shortcuts-heading" className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
           <Keyboard className="w-3.5 h-3.5" /> Keyboard Shortcuts
         </div>
         <button
@@ -82,7 +82,7 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ value, onCha
             setPendingSwap(null);
             setMessage(null);
           }}
-          className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1"
+          className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1"
         >
           <RotateCcw className="w-3 h-3" /> Reset all
         </button>
@@ -104,7 +104,7 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ value, onCha
         </div>
       )}
 
-      <div className="rounded-lg border border-slate-800 divide-y divide-slate-800">
+      <div className="rounded-lg border border-white/10 divide-y divide-white/10">
         {SHORTCUT_ACTIONS.map(({ id, label }) => {
           const isRecording = recording === id;
           const isDefault = value[id] === DEFAULT_SHORTCUTS[id];
@@ -120,8 +120,8 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ value, onCha
                   onBlur={() => isRecording && setRecording(null)}
                   className={`min-w-[96px] px-2 py-1 rounded-md border font-mono text-xs text-center transition-colors ${
                     isRecording
-                      ? 'border-emerald-500 bg-emerald-500/10 text-emerald-200 animate-pulse'
-                      : 'border-slate-700 bg-slate-900 text-slate-100 hover:border-slate-500'
+                      ? 'border-sky-500 bg-slate-800 text-slate-100'
+                      : 'border-white/10 bg-slate-900 text-slate-100 hover:border-slate-500'
                   }`}
                 >
                   {isRecording ? 'Press keys…' : formatCombo(value[id])}
@@ -141,7 +141,7 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ value, onCha
           );
         })}
       </div>
-      <p className="text-[10px] text-slate-500">
+      <p className="text-xs text-slate-500">
         Click a shortcut, then press the new keys. Esc cancels, Backspace removes the shortcut. The system-wide shortcut works while the app is running, even when another app is in front.
       </p>
     </div>

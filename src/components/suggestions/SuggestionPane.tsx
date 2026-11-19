@@ -18,7 +18,7 @@ export const SuggestionPane: React.FC = () => {
 
   const handleCustomApply = () => {
     if (!sentence || !customText.trim()) return;
-    editorStore.applySentenceRevision(sentence.id, customText.trim(), 'Custom Edit');
+    editorStore.applySentenceRevision(sentence.id, customText.trim(), 'Custom edit');
     setCustomText('');
   };
 
@@ -29,19 +29,19 @@ export const SuggestionPane: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Pane Header */}
-      <div className="h-10 border-b border-slate-800 bg-slate-900 px-4 flex items-center justify-between text-xs font-semibold text-slate-300 uppercase tracking-wider select-none shrink-0">
+      <div className="h-10 border-b border-white/10 bg-slate-900 px-4 flex items-center justify-between text-xs font-medium text-slate-300 select-none shrink-0">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-sky-400" />
-          <span>Suggestions & Rewrites</span>
+          <Sparkles className="w-4 h-4 text-slate-500" />
+          <span>Suggestions</span>
         </div>
         {sentence && (
           <button
             onClick={handleRegenerate}
             disabled={state.isLoadingRewrites}
-            className="flex items-center gap-1 text-[11px] font-normal text-sky-400 hover:text-sky-300 transition-colors disabled:opacity-50 lowercase"
+            className="flex items-center gap-1 text-xs font-normal text-slate-400 hover:text-slate-100 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3 h-3 ${state.isLoadingRewrites ? 'animate-spin' : ''}`} />
-            refresh
+            Refresh
           </button>
         )}
       </div>
@@ -51,34 +51,34 @@ export const SuggestionPane: React.FC = () => {
         {!sentence ? (
           /* Empty State */
           <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400">
-              <MessageSquare className="w-6 h-6 text-sky-400/80" />
+            <div className="w-12 h-12 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400">
+              <MessageSquare className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="font-semibold text-sm text-slate-200">No Sentence Selected</h3>
+              <h3 className="font-medium text-sm text-slate-200">No sentence selected</h3>
               <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-                Click on any sentence in the source editor to view deterministic linguistic checks, tone variations, and AI rewrites.
+                Select a sentence in the editor to see its checks and rewrite options.
               </p>
             </div>
           </div>
         ) : (
           <>
             {/* Active Sentence Preview Box */}
-            <div className="p-3.5 bg-slate-950/60 rounded-xl border border-sky-500/30 space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
-                <span>Active Sentence</span>
+            <div className="p-3.5 bg-slate-850 rounded-xl border border-sky-500/40 space-y-2">
+              <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span>Selected sentence</span>
                 <span>{sentence.trimmedText.split(/\s+/).filter(Boolean).length} words</span>
               </div>
-              <p className="text-sm font-medium text-slate-100 leading-relaxed">
-                "{sentence.trimmedText}"
+              <p className="text-[15px] font-serif text-slate-100 leading-7">
+                {sentence.trimmedText}
               </p>
             </div>
 
             {/* Deterministic Issues (if any) */}
             {state.activeSentenceIssues.length > 0 && (
               <div className="space-y-2">
-                <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Linguistic Checks ({state.activeSentenceIssues.length})
+                <div className="text-xs font-medium text-slate-400">
+                  Checks ({state.activeSentenceIssues.length})
                 </div>
                 <div className="space-y-2">
                   {state.activeSentenceIssues.map((issue) => (
@@ -93,15 +93,15 @@ export const SuggestionPane: React.FC = () => {
 
             {/* Side-by-side Rewrite Variations */}
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                <span>Rewrite Options</span>
+              <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+                <span>Rewrites</span>
                 <div className="flex items-center gap-2">
-                  <span>{state.rewriteOptions.length} choices</span>
+                  <span>{state.rewriteOptions.length} options</span>
                   {state.rewriteOptions.length > 0 && (
                     <button
                       onClick={handleRegenerate}
-                      className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1"
-                      title="Regenerate Options"
+                      className="text-xs text-slate-400 hover:text-slate-100 flex items-center gap-1"
+                      title="Regenerate rewrites"
                     >
                       <RefreshCw className="w-3 h-3" />
                       Regenerate
@@ -114,7 +114,7 @@ export const SuggestionPane: React.FC = () => {
                 /* Loading Skeleton */
                 <div className="space-y-2.5">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="p-4 bg-slate-850 rounded-xl border border-slate-800 animate-pulse space-y-2">
+                    <div key={i} className="p-4 bg-slate-850 rounded-xl border border-white/10 space-y-2">
                       <div className="h-3 w-1/3 bg-slate-700/50 rounded" />
                       <div className="h-4 w-full bg-slate-700/30 rounded" />
                     </div>
@@ -127,9 +127,9 @@ export const SuggestionPane: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 text-center rounded-xl bg-slate-850 border border-slate-800 space-y-3">
+                <div className="p-4 text-center rounded-xl bg-slate-850 border border-white/10 space-y-3">
                   <p className="text-xs text-slate-400">
-                    Click below to generate rewrite options for this sentence.
+                    No rewrites yet for this sentence.
                   </p>
                   <Button
                     variant="primary"
@@ -138,16 +138,16 @@ export const SuggestionPane: React.FC = () => {
                     className="w-full text-xs"
                   >
                     <Sparkles className="w-3.5 h-3.5 mr-1" />
-                    Generate Rewrites
+                    Generate rewrites
                   </Button>
                 </div>
               )}
             </div>
 
             {/* Quick Custom Rewrite Input */}
-            <div className="pt-2 border-t border-slate-800 space-y-2">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Custom Edit
+            <div className="pt-2 border-t border-white/10 space-y-2">
+              <span className="text-xs font-medium text-slate-400">
+                Custom edit
               </span>
               <div className="flex items-center gap-2">
                 <input
@@ -156,8 +156,8 @@ export const SuggestionPane: React.FC = () => {
                   onChange={(e) => setCustomText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCustomApply()}
                   aria-label="Custom edit text"
-                  placeholder="Type your own variation..."
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                  placeholder="Your own version"
+                  className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus-visible:border-sky-500"
                 />
                 <Button
                   variant="secondary"

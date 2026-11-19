@@ -10,14 +10,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ originalText, modifiedTe
   const diffResult = computeWordDiff(originalText, modifiedText);
 
   return (
-    <div className="font-sans text-xs leading-relaxed space-y-1">
-      <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
+    <div className="font-serif text-[15px] leading-7 space-y-1">
+      <div className="p-4 rounded-xl bg-slate-850 border border-white/10">
         {diffResult.changes.map((c, i) => {
           if (c.op === 'insert') {
             return (
               <span
                 key={i}
-                className="bg-emerald-500/20 text-emerald-300 font-semibold px-0.5 rounded underline decoration-emerald-500/40"
+                className="text-emerald-300 underline decoration-emerald-500/60 underline-offset-4"
               >
                 {c.value}
               </span>
@@ -27,7 +27,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ originalText, modifiedTe
             return (
               <span
                 key={i}
-                className="bg-rose-950/40 text-rose-400 line-through decoration-rose-500 px-0.5 opacity-60"
+                className="text-rose-400/80 line-through decoration-rose-500/70"
               >
                 {c.value}
               </span>

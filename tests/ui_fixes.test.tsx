@@ -95,7 +95,7 @@ describe('keyboard shortcuts', () => {
     const save = vi.spyOn(editorStore, 'saveCurrentDocument').mockResolvedValue();
     render(<App />);
     fireEvent.keyDown(document.body, { key: 's', metaKey: true });
-    fireEvent.click(screen.getByTitle('Save Document (⌘S)'));
+    fireEvent.click(screen.getByTitle('Save document (⌘S)'));
     expect(save).toHaveBeenCalledTimes(2);
   });
 });
@@ -108,7 +108,7 @@ describe('open dialog', () => {
     const { container } = render(<AppHeader onOpenSettings={() => {}} onOpenRules={() => {}} onOpenExport={() => {}} />);
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const clicked = vi.spyOn(fileInput, 'click');
-    fireEvent.click(screen.getByTitle(/Open Document/));
+    fireEvent.click(screen.getByTitle(/Open document/));
     await waitFor(() => expect(TauriBridge.openDocumentDialog).toHaveBeenCalled());
     expect(clicked).not.toHaveBeenCalled();
   });
@@ -119,7 +119,7 @@ describe('open dialog', () => {
     editorStore.loadDocument('Clean.', null, 'a.md');
     editorStore.updateRawContentDirectly('Dirty.');
     render(<AppHeader onOpenSettings={() => {}} onOpenRules={() => {}} onOpenExport={() => {}} />);
-    fireEvent.click(screen.getByTitle(/Open Document/));
+    fireEvent.click(screen.getByTitle(/Open document/));
     await waitFor(() => expect(TauriBridge.confirm).toHaveBeenCalled());
     expect(dialog).not.toHaveBeenCalled();
   });
@@ -129,15 +129,15 @@ describe('modals', () => {
   it('expose dialog semantics labelled by their heading and take focus on open', () => {
     const noop = () => {};
     const { unmount: u1 } = render(<ExportModal isOpen onClose={noop} />);
-    expect(screen.getByRole('dialog', { name: 'Export Document' })).toHaveAttribute('aria-modal', 'true');
+    expect(screen.getByRole('dialog', { name: 'Export document' })).toHaveAttribute('aria-modal', 'true');
     expect(screen.getByRole('dialog')).toHaveFocus();
     u1();
     const { unmount: u2 } = render(<SettingsModal isOpen onClose={noop} />);
-    expect(screen.getByRole('dialog', { name: 'Application Settings' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument();
     u2();
     const { unmount: u3 } = render(<RuleManagerModal isOpen onClose={noop} />);
-    expect(screen.getByRole('dialog', { name: /Custom Rules/ })).toBeInTheDocument();
-    expect(screen.getByLabelText('Rule Name')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /Rules and dictionary/ })).toBeInTheDocument();
+    expect(screen.getByLabelText('Rule name')).toBeInTheDocument();
     u3();
     render(<ApplyAllModal isOpen onClose={noop} />);
     expect(screen.getByRole('dialog', { name: /Apply All Safe Fixes/ })).toBeInTheDocument();
@@ -166,7 +166,7 @@ describe('modals', () => {
   it('RuleManagerModal surfaces a backend-rejected rule as a visible error', async () => {
     vi.spyOn(rulesStore, 'addRule').mockRejectedValue("Invalid rule pattern '(': unclosed group");
     render(<RuleManagerModal isOpen onClose={() => {}} />);
-    fireEvent.change(screen.getByLabelText('Rule Name'), { target: { value: 'r' } });
+    fireEvent.change(screen.getByLabelText('Rule name'), { target: { value: 'r' } });
     fireEvent.change(screen.getByLabelText('Pattern (Regex / Text)'), { target: { value: 'abc' } });
     fireEvent.click(screen.getByRole('button', { name: /Add Rule/ }));
     expect(await screen.findByRole('alert')).toHaveTextContent('unclosed group');

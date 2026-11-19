@@ -34,17 +34,17 @@ export const RewriteCard: React.FC<RewriteCardProps> = ({ option }) => {
   return (
     <Card
       hoverable
-      className="border-slate-800 bg-slate-850 hover:border-sky-500/50 hover:bg-slate-800/90 transition-all p-3.5 space-y-2.5 group"
+      className="border-white/10 bg-slate-850 hover:border-white/20 hover:bg-slate-800 transition-colors p-3.5 space-y-2.5 group"
     >
       {/* Card Header: Label & Badges */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           {option.isAiGenerated ? (
-            <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+            <Sparkles className="w-3.5 h-3.5 text-slate-400" />
           ) : (
-            <Wand2 className="w-3.5 h-3.5 text-indigo-400" />
+            <Wand2 className="w-3.5 h-3.5 text-slate-400" />
           )}
-          <span className="font-semibold text-xs text-slate-200 group-hover:text-white transition-colors">
+          <span className="font-medium text-xs text-slate-200 transition-colors">
             {option.label}
           </span>
         </div>
@@ -64,13 +64,13 @@ export const RewriteCard: React.FC<RewriteCardProps> = ({ option }) => {
       </div>
 
       {/* Side-by-side Inline Diff Render */}
-      <div className="text-sm leading-relaxed text-slate-200 font-sans p-2 rounded-lg bg-slate-900/80 border border-slate-800">
+      <div className="text-[15px] leading-7 text-slate-200 font-serif p-3 rounded-lg bg-slate-900 border border-white/10">
         {option.diff.map((change, idx) => {
           if (change.op === 'insert') {
             return (
               <span
                 key={idx}
-                className="bg-emerald-500/20 text-emerald-300 font-medium px-0.5 rounded underline decoration-emerald-500/40 decoration-2"
+                className="text-emerald-300 underline decoration-emerald-500/60 underline-offset-4"
               >
                 {change.value}
               </span>
@@ -80,7 +80,7 @@ export const RewriteCard: React.FC<RewriteCardProps> = ({ option }) => {
             return (
               <span
                 key={idx}
-                className="bg-rose-950/40 text-rose-400 line-through decoration-rose-500 px-0.5 opacity-60 text-xs"
+                className="text-rose-400/80 line-through decoration-rose-500/70"
               >
                 {change.value}
               </span>
@@ -92,7 +92,7 @@ export const RewriteCard: React.FC<RewriteCardProps> = ({ option }) => {
 
       {/* Description & Action Bar */}
       <div className="flex items-center justify-between gap-2 pt-1">
-        <p className="text-[11px] text-slate-500 truncate max-w-[200px]">
+        <p className="text-xs text-slate-500 truncate max-w-[12rem]">
           {option.description}
         </p>
 
@@ -101,7 +101,7 @@ export const RewriteCard: React.FC<RewriteCardProps> = ({ option }) => {
             variant="primary"
             size="sm"
             onClick={handleAccept}
-            className="text-xs px-3 py-1 font-semibold"
+            className="text-xs px-3 py-1 font-medium"
           >
             <Check className="w-3.5 h-3.5 mr-1" /> Accept
           </Button>

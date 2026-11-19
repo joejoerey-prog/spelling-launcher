@@ -8,7 +8,7 @@ import {
   Redo2,
   SlidersHorizontal,
   BookOpen,
-  Rocket,
+  ChevronUp,
   Loader2,
   CheckCheck,
 } from 'lucide-react';
@@ -139,7 +139,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   });
 
   return (
-    <header className="h-14 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-4 flex items-center justify-between shrink-0 select-none">
+    <header className="h-14 border-b border-white/10 bg-slate-900 px-4 flex items-center justify-between shrink-0 select-none">
       {/* Hidden file input supporting PDF, Apple Pages, DOCX, and Markdown/Text */}
       <input
         type="file"
@@ -151,9 +151,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
       {/* Brand & Document Name */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-950/40 border border-emerald-400/30">
-          <Rocket className="w-4 h-4 text-emerald-100" />
-          <span className="font-bold text-sm tracking-tight text-white">Spelling Launcher</span>
+        <div className="flex items-center gap-2">
+          <ChevronUp className="w-4 h-4 text-sky-400" strokeWidth={2} />
+          <span className="font-medium text-base text-slate-100">Spelling Launcher</span>
         </div>
 
         <div className="h-5 w-px bg-slate-800" />
@@ -162,34 +162,34 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <FileText className="w-4 h-4 text-slate-500" />
           <span className="font-medium truncate max-w-xs">{state.document.fileName}</span>
           {isOpeningFile ? (
-            <span className="flex items-center gap-1 text-xs text-emerald-400">
-              <Loader2 className="w-3 h-3 animate-spin" /> Extracting document text...
+            <span className="flex items-center gap-1 text-xs text-slate-400">
+              <Loader2 className="w-3 h-3 animate-spin" /> Reading document
             </span>
           ) : state.document.isDirty ? (
-            <span className="w-2 h-2 rounded-full bg-amber-400" title="Unsaved changes" />
+            <span className="w-2 h-2 rounded-full bg-sky-400" title="Unsaved changes" />
           ) : null}
         </div>
       </div>
 
       {/* Document & History Actions */}
       <div className="flex items-center gap-1.5">
-        <Button variant="ghost" size="sm" onClick={handleNewDocument} title={withKey('New Document', 'newDocument')}>
+        <Button variant="ghost" size="sm" onClick={handleNewDocument} title={withKey('New document', 'newDocument')}>
           New
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          icon={isOpeningFile ? <Loader2 className="w-4 h-4 animate-spin text-emerald-400" /> : <FolderOpen className="w-4 h-4" />}
+          icon={isOpeningFile ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : <FolderOpen className="w-4 h-4" />}
           onClick={handleOpenFileClick}
           disabled={isOpeningFile}
-          title={withKey('Open Document (.pdf, .pages, .docx, .md, .txt)', 'open')}
+          title={withKey('Open document (.pdf, .pages, .docx, .md, .txt)', 'open')}
         >
-          {isOpeningFile ? 'Reading...' : 'Open'}
+          {isOpeningFile ? 'Opening' : 'Open'}
         </Button>
-        <Button variant="ghost" size="sm" icon={<Save className="w-4 h-4" />} onClick={() => editorStore.saveCurrentDocument()} title={withKey('Save Document', 'save')}>
+        <Button variant="ghost" size="sm" icon={<Save className="w-4 h-4" />} onClick={() => editorStore.saveCurrentDocument()} title={withKey('Save document', 'save')}>
           Save
         </Button>
-        <Button variant="ghost" size="sm" icon={<Download className="w-4 h-4" />} onClick={onOpenExport} title={withKey('Export Document', 'export')}>
+        <Button variant="ghost" size="sm" icon={<Download className="w-4 h-4" />} onClick={onOpenExport} title={withKey('Export document', 'export')}>
           Export
         </Button>
 
@@ -220,19 +220,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <Button
               variant="secondary"
               size="sm"
-              icon={<CheckCheck className="w-4 h-4 text-emerald-400" />}
+              icon={<CheckCheck className="w-4 h-4" />}
               onClick={onOpenApplyAll}
-              className="bg-emerald-950/50 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/60 shadow-sm"
-              title={withKey('Review & Apply All Gate-Verified Safe Fixes', 'applyAll')}
+              className="text-sky-300 border-sky-500/30"
+              title={withKey('Review and apply all verified safe fixes', 'applyAll')}
             >
-              Apply Safe ({eligibleCount})
+              Apply safe fixes ({eligibleCount})
             </Button>
           </>
         )}
 
         <div className="h-5 w-px bg-slate-800 mx-1" />
 
-        <Button variant="ghost" size="sm" icon={<BookOpen className="w-4 h-4" />} onClick={onOpenRules} title="Linguistic Rules & Custom Terms">
+        <Button variant="ghost" size="sm" icon={<BookOpen className="w-4 h-4" />} onClick={onOpenRules} title="Rules and custom terms">
           Rules
         </Button>
         <Button variant="ghost" size="sm" icon={<SlidersHorizontal className="w-4 h-4" />} onClick={onOpenSettings} title={withKey('Settings', 'openSettings')}>

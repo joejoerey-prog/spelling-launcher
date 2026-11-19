@@ -55,20 +55,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="export-modal-title"
         tabIndex={-1}
-        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col outline-none"
+        className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col outline-none"
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Download className="w-5 h-5 text-emerald-400" />
-            <h2 id="export-modal-title" className="text-base font-bold text-slate-100">Export Document</h2>
+            <Download className="w-5 h-5 text-slate-400" />
+            <h2 id="export-modal-title" className="text-base font-medium text-slate-100">Export document</h2>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
@@ -78,7 +78,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         {/* Body */}
         <div className="p-6 space-y-4 text-sm text-slate-300">
           <div className="space-y-1.5">
-            <label htmlFor="export-filename" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <label htmlFor="export-filename" className="text-xs font-medium text-slate-400">
               File Name
             </label>
             <input
@@ -86,48 +86,48 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
               type="text"
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
               placeholder="document-name"
             />
           </div>
 
           <div className="space-y-1.5">
-            <div id="export-format-label" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div id="export-format-label" className="text-xs font-medium text-slate-400">
               Format
             </div>
             <div role="group" aria-labelledby="export-format-label" className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setFormat('md')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-colors ${
                   format === 'md'
-                    ? 'border-emerald-500 bg-emerald-950/20 text-emerald-200'
-                    : 'border-slate-800 bg-slate-850 text-slate-400 hover:bg-slate-800'
+                    ? 'border-sky-500 bg-slate-800 text-slate-100'
+                    : 'border-white/10 bg-slate-850 text-slate-400 hover:bg-slate-800'
                 }`}
               >
-                <div className="font-semibold text-xs">Markdown (.md)</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">Preserves headings & lists</div>
+                <div className="font-medium text-xs">Markdown (.md)</div>
+                <div className="text-xs text-slate-500 mt-0.5">Preserves headings & lists</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setFormat('txt')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-colors ${
                   format === 'txt'
-                    ? 'border-emerald-500 bg-emerald-950/20 text-emerald-200'
-                    : 'border-slate-800 bg-slate-850 text-slate-400 hover:bg-slate-800'
+                    ? 'border-sky-500 bg-slate-800 text-slate-100'
+                    : 'border-white/10 bg-slate-850 text-slate-400 hover:bg-slate-800'
                 }`}
               >
-                <div className="font-semibold text-xs">Plain Text (.txt)</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">Universal compatibility</div>
+                <div className="font-medium text-xs">Plain text (.txt)</div>
+                <div className="text-xs text-slate-500 mt-0.5">Universal compatibility</div>
               </button>
             </div>
           </div>
 
           {/* Safe Filename Preview */}
-          <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-xs flex items-center justify-between">
-            <span className="text-slate-400">Export Target:</span>
-            <span className="font-mono text-emerald-400 font-semibold">{sanitizedName}</span>
+          <div className="p-3 bg-slate-950 rounded-lg border border-white/10 text-xs flex items-center justify-between">
+            <span className="text-slate-400">Saves as</span>
+            <span className="font-mono text-emerald-400 font-medium">{sanitizedName}</span>
           </div>
 
           {exportMessage && (
@@ -150,7 +150,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-white/10 bg-slate-850 flex items-center justify-end gap-3">
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>

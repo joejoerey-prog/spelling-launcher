@@ -63,7 +63,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     }
   };
 
-  // Fetch local Ollama models ONLY on explicit user invocation (Test Connection button)
+  // Fetch local Ollama models ONLY on explicit user invocation (Test connection button)
   const fetchOllamaModels = async () => {
     setOllamaStatus('testing');
     setOllamaMessage('Connecting to local Ollama...');
@@ -90,7 +90,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   // NOTE: Automated on-mount probing to port 11434 has been completely removed.
-  // Connection to Ollama is tested strictly when the user clicks 'Test Connection'.
+  // Connection to Ollama is tested strictly when the user clicks 'Test connection'.
 
   if (!isOpen) return null;
 
@@ -117,20 +117,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-modal-title"
         tabIndex={-1}
-        className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
+        className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Sliders className="w-5 h-5 text-emerald-400" />
-            <h2 id="settings-modal-title" className="text-base font-bold text-slate-100">Application Settings</h2>
+            <Sliders className="w-5 h-5 text-slate-400" />
+            <h2 id="settings-modal-title" className="text-base font-medium text-slate-100">Settings</h2>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
@@ -145,7 +145,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <div className="flex items-start gap-2.5">
                 <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-1 text-xs">
-                  <p className="font-semibold text-amber-200">
+                  <p className="font-medium text-amber-200">
                     Settings Migrated (Schema Version {unacknowledgedMigration.schema_version})
                   </p>
                   <p className="text-amber-200/90 leading-relaxed">
@@ -167,7 +167,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {/* Privacy Notice */}
           <div className="p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl flex items-start gap-3">
-            <Shield className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <Shield className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
             <p className="text-xs text-emerald-200/90 leading-relaxed">
               <strong>100% Local-First & Air-Gapped:</strong> Proofreading is powered natively by macOS NSSpellChecker and local deterministic rules. Zero cloud tracking, zero daemons. Ollama is strictly opt-in for sentence rewriting.
             </p>
@@ -175,104 +175,104 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {/* Proofreading Language (Native Engine) */}
           <div className="space-y-2">
-            <div id="settings-language-label" className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div id="settings-language-label" className="block text-xs font-medium text-slate-400">
               Proofreading Language (Native macOS Engine)
             </div>
             <div role="group" aria-labelledby="settings-language-label" className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setLanguage('en_GB')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-colors ${
                   language === 'en_GB'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-white shadow-sm ring-1 ring-emerald-500/40'
-                    : 'border-slate-800 bg-slate-850 hover:bg-slate-800 text-slate-300'
+                    ? 'border-sky-500 bg-slate-800 text-white'
+                    : 'border-white/10 bg-slate-850 hover:bg-slate-800 text-slate-300'
                 }`}
               >
-                <div className="font-semibold text-xs text-emerald-400">British English (en_GB)</div>
-                <div className="text-[10px] text-slate-400 mt-1">Default (dual-dict Oxford -ize accepted)</div>
+                <div className="font-medium text-xs text-slate-100">British English (en_GB)</div>
+                <div className="text-xs text-slate-400 mt-1">Default (dual-dict Oxford -ize accepted)</div>
               </button>
               <button
                 type="button"
                 onClick={() => setLanguage('en_US')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-colors ${
                   language === 'en_US'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-white shadow-sm ring-1 ring-emerald-500/40'
-                    : 'border-slate-800 bg-slate-850 hover:bg-slate-800 text-slate-300'
+                    ? 'border-sky-500 bg-slate-800 text-white'
+                    : 'border-white/10 bg-slate-850 hover:bg-slate-800 text-slate-300'
                 }`}
               >
-                <div className="font-semibold text-xs text-sky-400">American English (en_US)</div>
-                <div className="text-[10px] text-slate-400 mt-1">US orthography & vocabulary</div>
+                <div className="font-medium text-xs text-slate-100">American English (en_US)</div>
+                <div className="text-xs text-slate-400 mt-1">US orthography & vocabulary</div>
               </button>
             </div>
           </div>
 
           {/* Rewrite Provider Selection */}
           <div className="space-y-3">
-            <div id="settings-provider-label" className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div id="settings-provider-label" className="block text-xs font-medium text-slate-400">
               Rewrite Engine Provider
             </div>
             <div role="group" aria-labelledby="settings-provider-label" className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setProvider('ollama')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-colors ${
                   provider === 'ollama'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-white shadow-sm ring-1 ring-emerald-500/40'
-                    : 'border-slate-800 bg-slate-850 hover:bg-slate-800 text-slate-300'
+                    ? 'border-sky-500 bg-slate-800 text-white'
+                    : 'border-white/10 bg-slate-850 hover:bg-slate-800 text-slate-300'
                 }`}
               >
-                <div className="font-semibold text-xs text-emerald-400 flex items-center gap-1">
+                <div className="font-medium text-xs text-slate-100 flex items-center gap-1">
                   <Server className="w-3.5 h-3.5" /> Local Ollama
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1">Opt-in local LLM</div>
+                <div className="text-xs text-slate-400 mt-1">Opt-in local LLM</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setProvider('local')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-colors ${
                   provider === 'local'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-white shadow-sm ring-1 ring-emerald-500/40'
-                    : 'border-slate-800 bg-slate-850 hover:bg-slate-800 text-slate-300'
+                    ? 'border-sky-500 bg-slate-800 text-white'
+                    : 'border-white/10 bg-slate-850 hover:bg-slate-800 text-slate-300'
                 }`}
               >
-                <div className="font-semibold text-xs text-sky-400 flex items-center gap-1">
+                <div className="font-medium text-xs text-slate-100 flex items-center gap-1">
                   <Cpu className="w-3.5 h-3.5" /> Heuristics
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1">Built-in fast rules (Recommended, 0 MB RAM)</div>
+                <div className="text-xs text-slate-400 mt-1">Built-in fast rules (Recommended, 0 MB RAM)</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setProvider('openai')}
-                className={`p-3 rounded-xl border text-left transition-all ${
+                className={`p-3 rounded-xl border text-left transition-colors ${
                   provider === 'openai'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-white shadow-sm ring-1 ring-emerald-500/40'
-                    : 'border-slate-800 bg-slate-850 hover:bg-slate-800 text-slate-300'
+                    ? 'border-sky-500 bg-slate-800 text-white'
+                    : 'border-white/10 bg-slate-850 hover:bg-slate-800 text-slate-300'
                 }`}
               >
-                <div className="font-semibold text-xs text-indigo-400 flex items-center gap-1">
+                <div className="font-medium text-xs text-indigo-400 flex items-center gap-1">
                   <Key className="w-3.5 h-3.5" /> Cloud API
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1">OpenAI / Claude key</div>
+                <div className="text-xs text-slate-400 mt-1">OpenAI / Claude key</div>
               </button>
             </div>
           </div>
 
           {/* Ollama Configuration Section */}
           {provider === 'ollama' && (
-            <div className="space-y-3 p-4 bg-slate-950/80 rounded-xl border border-emerald-500/30">
+            <div className="space-y-3 p-4 bg-slate-850 rounded-xl border border-white/10">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
+                <span className="text-xs font-medium text-emerald-300 flex items-center gap-1.5">
                   <Server className="w-3.5 h-3.5" /> Local Ollama Server
                 </span>
                 <button
                   type="button"
                   onClick={fetchOllamaModels}
-                  className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+                  className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw className={`w-3 h-3 ${ollamaStatus === 'testing' ? 'animate-spin' : ''}`} />
-                  Test Connection
+                  Test connection
                 </button>
               </div>
 
@@ -284,18 +284,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   value={ollamaUrl}
                   onChange={(e) => setOllamaUrl(e.target.value)}
                   placeholder="http://localhost:11434/v1"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div className="space-y-1">
-                <label htmlFor="settings-ollama-model" className="text-xs text-slate-400">Selected Model</label>
+                <label htmlFor="settings-ollama-model" className="text-xs text-slate-400">Selected model</label>
                 {availableModels.length > 0 ? (
                   <select
                     id="settings-ollama-model"
                     value={ollamaModel}
                     onChange={(e) => setOllamaModel(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500 cursor-pointer"
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500 cursor-pointer"
                   >
                     {availableModels.map((m) => (
                       <option key={m} value={m}>
@@ -310,7 +310,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     value={ollamaModel}
                     onChange={(e) => setOllamaModel(e.target.value)}
                     placeholder="llama3.2:3b"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500"
                   />
                 )}
               </div>
@@ -322,24 +322,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     ? 'bg-emerald-950/60 border border-emerald-500/30 text-emerald-300'
                     : ollamaStatus === 'error'
                     ? 'bg-rose-950/60 border border-rose-500/30 text-rose-300'
-                    : 'bg-slate-900 border border-slate-800 text-slate-400'
+                    : 'bg-slate-900 border border-white/10 text-slate-400'
                 }`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
                     ollamaStatus === 'connected'
-                      ? 'bg-emerald-400 animate-pulse'
+                      ? 'bg-emerald-400'
                       : ollamaStatus === 'error'
                       ? 'bg-rose-400'
                       : 'bg-slate-500'
                   }`}
                 />
-                <span className="truncate">{ollamaMessage || 'Click "Test Connection" to query available local models.'}</span>
+                <span className="truncate">{ollamaMessage || 'Click "Test connection" to query available local models.'}</span>
               </div>
 
               {/* Memory / Resource Annotation */}
-              <div className="text-[11px] text-slate-400 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 space-y-1">
-                <div className="font-medium text-slate-300">Memory Footprint</div>
+              <div className="text-xs text-slate-400 bg-slate-900 p-2.5 rounded-lg border border-white/10 space-y-1">
+                <div className="font-medium text-slate-300">Memory use</div>
                 <div>2,595 MB peak while generating, 112 MB after idle unload (measured for llama3.2:3b)</div>
               </div>
             </div>
@@ -347,10 +347,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {/* Cloud API Configuration Section */}
           {provider === 'openai' && (
-            <div className="space-y-3 p-4 bg-slate-950/60 rounded-xl border border-slate-800">
+            <div className="space-y-3 p-4 bg-slate-850 rounded-xl border border-white/10">
               <div className="space-y-1">
                 <label htmlFor="settings-api-key" className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-                  <Key className="w-3.5 h-3.5 text-sky-400" />
+                  <Key className="w-3.5 h-3.5 text-slate-400" />
                   API Key (Stored locally in SQLite)
                 </label>
                 <input
@@ -359,7 +359,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="sk-..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-sky-500"
+                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-sky-500"
                 />
               </div>
 
@@ -372,7 +372,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     value={baseUrl}
                     onChange={(e) => setBaseUrl(e.target.value)}
                     placeholder="https://api.openai.com/v1"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-sky-500"
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-sky-500"
                   />
                 </div>
                 <div className="space-y-1">
@@ -383,7 +383,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
                     placeholder="gpt-4o-mini"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-sky-500"
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:outline-none focus:border-sky-500"
                   />
                 </div>
               </div>
@@ -392,34 +392,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           {/* Linguistic Check Toggles */}
           <div className="space-y-3">
-            <div className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div className="block text-xs font-medium text-slate-400">
               Deterministic Linguistic Checks
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center justify-between p-2.5 rounded-lg bg-slate-850 border border-slate-800 cursor-pointer hover:bg-slate-800">
+              <label className="flex items-center justify-between p-2.5 rounded-lg bg-slate-850 border border-white/10 cursor-pointer hover:bg-slate-800">
                 <div>
                   <span className="text-xs text-slate-200 block">Flag consecutive repeated words</span>
-                  <span className="text-[10px] text-slate-400">Detects duplicated tokens (e.g. "the the")</span>
+                  <span className="text-xs text-slate-400">Detects duplicated tokens (e.g. "the the")</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={checkRepetition}
                   onChange={(e) => setCheckRepetition(e.target.checked)}
-                  className="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                  className="rounded bg-slate-900 border-white/10 text-sky-500 focus:ring-0 w-4 h-4 cursor-pointer"
                 />
               </label>
 
-              <label className="flex items-center justify-between p-2.5 rounded-lg bg-slate-850 border border-slate-800 cursor-pointer hover:bg-slate-800">
+              <label className="flex items-center justify-between p-2.5 rounded-lg bg-slate-850 border border-white/10 cursor-pointer hover:bg-slate-800">
                 <div>
                   <span className="text-xs text-slate-200 block">Punctuation & comma spacing</span>
-                  <span className="text-[10px] text-slate-400">Flags missing/extra spaces around commas and punctuation</span>
+                  <span className="text-xs text-slate-400">Flags missing/extra spaces around commas and punctuation</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={checkTypography}
                   onChange={(e) => setCheckTypography(e.target.checked)}
-                  className="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                  className="rounded bg-slate-900 border-white/10 text-sky-500 focus:ring-0 w-4 h-4 cursor-pointer"
                 />
               </label>
             </div>
@@ -429,11 +429,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-white/10 bg-slate-850 flex items-center justify-end gap-3">
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" size="sm" onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-500 border-emerald-500/40">
+          <Button variant="primary" size="sm" onClick={handleSave}>
             <Check className="w-4 h-4 mr-1" /> Save Preferences
           </Button>
         </div>
