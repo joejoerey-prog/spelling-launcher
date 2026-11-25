@@ -14,6 +14,10 @@ export interface RewritePassageRequest {
   api_key?: string;
   base_url?: string;
   model?: string;
+  mode?: 'suggest' | 'polish';
+  context?: string;
+  dialect?: string;
+  protected_terms?: string[];
 }
 
 export interface RewritePassageResponse {

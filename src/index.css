@@ -17,6 +17,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Highlighted text drives Suggest and Polish, so it must stay readable on the dark page. */
+::selection {
+  background: rgba(201, 154, 60, 0.38);
+  color: #ededed;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

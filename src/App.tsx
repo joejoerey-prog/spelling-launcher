@@ -16,6 +16,7 @@ import { settingsStore } from './core/state/settingsStore';
 import { styleStore } from './core/state/styleStore';
 import { actionForCombo, effectiveShortcuts, emitShortcut, eventToCombo } from './core/shortcuts';
 import { TauriBridge } from './core/bridge/tauriBridge';
+import { readDocumentSelection } from './core/selectionRange';
 
 export const App: React.FC = () => {
   const [, setTick] = useState(0);
@@ -43,6 +44,7 @@ export const App: React.FC = () => {
         setIsRulesOpen(false);
         setIsExportOpen(false);
         setIsApplyAllOpen(false);
+        if (editorStore.getState.selectionEdit) editorStore.dismissSelectionEdit();
         return;
       }
 
@@ -63,6 +65,12 @@ export const App: React.FC = () => {
         case 'applyAll': setIsApplyAllOpen(true); break;
         case 'openSettings': setIsSettingsOpen(true); break;
         case 'generateRewrites': editorStore.generateRewritesForSelected(); break;
+        case 'suggestSelection':
+        case 'polishSelection':
+          // Inside a dialog the highlight is not document text.
+          if (e.target instanceof Element && e.target.closest('[role="dialog"]')) break;
+          void editorStore.startSelectionEdit(action === 'suggestSelection' ? 'suggest' : 'polish', readDocumentSelection());
+          break;
         default: emitShortcut(action); // open, newDocument, toggleRaw: handled by their components
       }
     };

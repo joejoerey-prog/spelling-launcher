@@ -53,6 +53,18 @@ pub struct RewritePassageRequest {
     pub api_key: Option<String>,
     pub base_url: Option<String>,
     pub model: Option<String>,
+    /// "suggest" or "polish" for highlighted text; absent for the plain sentence rewrite.
+    #[serde(default)]
+    pub mode: Option<String>,
+    /// The paragraph around the highlighted text, for meaning only.
+    #[serde(default)]
+    pub context: Option<String>,
+    /// "en_GB" or "en_US".
+    #[serde(default)]
+    pub dialect: Option<String>,
+    /// Text the model must copy exactly (learned words, ignored words).
+    #[serde(default)]
+    pub protected_terms: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

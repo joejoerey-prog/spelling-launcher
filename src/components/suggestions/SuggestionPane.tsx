@@ -5,6 +5,9 @@ import { IssueCard } from './IssueCard';
 import { RewriteCard } from './RewriteCard';
 import { ToneLengthSelector } from './ToneLengthSelector';
 import { Button } from '../ui/Button';
+import { SelectionEditCard } from './SelectionEditCard';
+import { effectiveShortcuts, formatCombo } from '../../core/shortcuts';
+import { settingsStore } from '../../core/state/settingsStore';
 
 export const SuggestionPane: React.FC = () => {
   const [, setTick] = useState(0);
@@ -14,6 +17,8 @@ export const SuggestionPane: React.FC = () => {
 
   const state = editorStore.getState;
   const sentence = editorStore.getSelectedSentence();
+  const selectionEdit = state.selectionEdit;
+  const keys = effectiveShortcuts(settingsStore.state.shortcuts);
   const [customText, setCustomText] = useState('');
 
   const handleCustomApply = () => {
@@ -48,7 +53,15 @@ export const SuggestionPane: React.FC = () => {
 
       {/* Pane Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {selectionEdit && (
+          <SelectionEditCard
+            key={selectionEdit.id}
+            session={selectionEdit}
+            stale={selectionEdit.snapshot !== state.document.rawContent}
+          />
+        )}
         {!sentence ? (
+          selectionEdit ? null : (
           /* Empty State */
           <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
             <div className="w-12 h-12 rounded-xl bg-ink-800 border border-white/10 flex items-center justify-center text-ink-400">
@@ -59,8 +72,17 @@ export const SuggestionPane: React.FC = () => {
               <p className="text-xs text-ink-400 max-w-xs leading-relaxed">
                 Select a sentence in the editor to see its checks and rewrite options.
               </p>
+              {(keys.suggestSelection || keys.polishSelection) && (
+                <p className="text-xs text-ink-500 max-w-xs leading-relaxed">
+                  Or highlight any text
+                  {keys.suggestSelection && ` and press ${formatCombo(keys.suggestSelection)} for replacements`}
+                  {keys.suggestSelection && keys.polishSelection && ', or'}
+                  {keys.polishSelection && ` ${formatCombo(keys.polishSelection)} to polish it`}.
+                </p>
+              )}
             </div>
           </div>
+          )
         ) : (
           <>
             {/* Active Sentence Preview Box */}
