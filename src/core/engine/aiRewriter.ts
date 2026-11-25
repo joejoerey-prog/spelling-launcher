@@ -88,6 +88,12 @@ export async function rewriteSelectedPassage(
       api_key: apiKey || undefined,
       base_url: baseUrl,
       model: model,
+      ...(options.mode && {
+        mode: options.mode,
+        context: options.context,
+        dialect: options.dialect,
+        protected_terms: options.protectedTerms,
+      }),
     });
 
     const rewriteOptions: RewriteOption[] = res.variations

@@ -105,6 +105,9 @@ function convertPassiveToActive(text: string): string | null {
   return null;
 }
 
+/** Padding options that are only offered when nothing else applies; they make no sense for a highlighted fragment. */
+export const FILLER_REWRITE_LABELS = new Set(['Expanded & Nuanced', 'Clear & Fluid', 'Formal Transition']);
+
 /**
  * Generates rich, side-by-side local rewrite options for any sentence without needing an API key.
  */

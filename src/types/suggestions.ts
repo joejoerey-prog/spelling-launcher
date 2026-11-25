@@ -59,4 +59,9 @@ export interface RewriteRequestOptions {
   length: RewriteLength;
   goal: RewriteGoal;
   customPrompt?: string;
+  /** Highlighted-text requests only; when `mode` is unset the request is the plain sentence rewrite. */
+  mode?: 'suggest' | 'polish';
+  context?: string;
+  dialect?: 'en_GB' | 'en_US';
+  protectedTerms?: string[];
 }

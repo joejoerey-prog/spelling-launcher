@@ -67,6 +67,120 @@ pub fn extract_variations_from_text(raw: &str) -> Vec<String> {
         .collect()
 }
 
+/// System prompt, user prompt and temperature for a rewrite request.
+/// Without `mode` this is the plain single-sentence rewrite, unchanged.
+pub fn build_prompts(req: &RewritePassageRequest, text: &str) -> (String, String, f64) {
+    let tone_instruction = match req.tone.to_lowercase().as_str() {
+        "casual" => "Make it relaxed, conversational, friendly, and natural.",
+        "professional" => "Make it polished, formal, and articulate for professional communication.",
+        "academic" => "Make it rigorous, scholarly, and articulate with elevated vocabulary.",
+        "confident" => "Make it assertive, direct, and authoritative without weak qualifiers.",
+        "friendly" => "Make it warm, inviting, and empathetic.",
+        "direct" => "Make it extremely concise, punchy, and straightforward.",
+        _ => "Improve fluency and expressiveness.",
+    };
+
+    let length_instruction = match req.length.to_lowercase().as_str() {
+        "shorten" => "Make the rewrites significantly shorter, cutting fluff.",
+        "expand" => "Expand the sentence with more rich detail, nuance, and clarity.",
+        _ => "Keep approximately the same length.",
+    };
+
+    let mode = match req.mode.as_deref() {
+        Some(m @ ("suggest" | "polish")) => m,
+        _ => {
+            let prompt = format!(
+                r#"Rewrite the following single sentence into 4 high-quality, diverse variations.
+
+Source sentence:
+"{}"
+
+Style guidelines:
+- Tone: {}
+- Length: {}
+- Goal: {}
+- Preserve formatting tags if present.
+- Output ONLY a JSON array of 4 strings with no code fences and no conversational filler.
+Format: ["Variation 1", "Variation 2", "Variation 3", "Variation 4"]"#,
+                text, tone_instruction, length_instruction, req.goal
+            );
+            return (
+                "You are a concise sentence rewriting assistant. You must output only a valid JSON array of 4 strings."
+                    .to_string(),
+                prompt,
+                0.7,
+            );
+        }
+    };
+
+    let spelling = match req.dialect.as_deref() {
+        Some("en_US") => "- Spelling: American English (-ize, -or). Do not switch to British spellings.\n",
+        Some("en_GB") => "- Spelling: British English (-ise, -our). Do not switch to American spellings.\n",
+        _ => "",
+    };
+    let terms = req
+        .protected_terms
+        .as_ref()
+        .map(|t| t.iter().filter(|w| !w.trim().is_empty()).take(50).cloned().collect::<Vec<_>>())
+        .filter(|t| !t.is_empty())
+        .map(|t| format!("- Copy these terms exactly if they appear: {}.\n", t.join(", ")))
+        .unwrap_or_default();
+    let context = req
+        .context
+        .as_deref()
+        .map(str::trim)
+        .filter(|c| !c.is_empty())
+        .map(|c| format!("\nParagraph it comes from (for meaning only; do not rewrite it):\n\"{}\"\n", c))
+        .unwrap_or_default();
+    let rules = format!(
+        "- Keep text inside quotation marks, code in backticks, URLs, email addresses, line breaks and list or heading markers exactly as written.\n{}{}- Do not add a capital letter or full stop at the start or end that the highlighted text does not have.\n",
+        spelling, terms
+    );
+
+    if mode == "polish" {
+        let prompt = format!(
+            r#"Polish the highlighted text below with the smallest edit that works.
+
+Highlighted text:
+"{}"
+{}
+Rules:
+- Fix only clear mistakes in spelling, grammar and punctuation, and cut obvious filler.
+- Do not change the meaning, voice, tone or word choice otherwise.
+- If it is already good, return it unchanged.
+{}- Output ONLY a JSON array with exactly 1 string, with no code fences and no conversational filler.
+Format: ["Polished text"]"#,
+            text, context, rules
+        );
+        return (
+            "You are a careful copy editor. You must output only a valid JSON array of 1 string.".to_string(),
+            prompt,
+            0.2,
+        );
+    }
+
+    let prompt = format!(
+        r#"Write 4 diverse replacement options for the highlighted text below, best option first.
+
+Highlighted text:
+"{}"
+{}
+Rules:
+- Each option replaces ONLY the highlighted text and must fit the paragraph where it stands.
+- Tone: {}
+- Length: {}
+- Goal: {}
+{}- Output ONLY a JSON array of 4 strings with no code fences and no conversational filler.
+Format: ["Option 1", "Option 2", "Option 3", "Option 4"]"#,
+        text, context, tone_instruction, length_instruction, req.goal, rules
+    );
+    (
+        "You are a concise rewriting assistant. You must output only a valid JSON array of 4 strings.".to_string(),
+        prompt,
+        0.7,
+    )
+}
+
 /// Securely rewrites ONLY the provided selected passage via Local Ollama or OpenAI-compatible API.
 pub async fn rewrite_passage_api(
     req: RewritePassageRequest,
@@ -76,6 +190,8 @@ pub async fn rewrite_passage_api(
     if text.is_empty() {
         return Err("Cannot rewrite empty passage".to_string());
     }
+    // Built first: the fields below are moved out of `req` one by one.
+    let (system_prompt, prompt, temperature) = build_prompts(&req, text);
 
     let base_url = req
         .base_url
@@ -96,38 +212,6 @@ pub async fn rewrite_passage_api(
         });
 
     let api_key = req.api_key.unwrap_or_default();
-
-    let tone_instruction = match req.tone.to_lowercase().as_str() {
-        "casual" => "Make it relaxed, conversational, friendly, and natural.",
-        "professional" => "Make it polished, formal, and articulate for professional communication.",
-        "academic" => "Make it rigorous, scholarly, and articulate with elevated vocabulary.",
-        "confident" => "Make it assertive, direct, and authoritative without weak qualifiers.",
-        "friendly" => "Make it warm, inviting, and empathetic.",
-        "direct" => "Make it extremely concise, punchy, and straightforward.",
-        _ => "Improve fluency and expressiveness.",
-    };
-
-    let length_instruction = match req.length.to_lowercase().as_str() {
-        "shorten" => "Make the rewrites significantly shorter, cutting fluff.",
-        "expand" => "Expand the sentence with more rich detail, nuance, and clarity.",
-        _ => "Keep approximately the same length.",
-    };
-
-    let prompt = format!(
-        r#"Rewrite the following single sentence into 4 high-quality, diverse variations.
-
-Source sentence:
-"{}"
-
-Style guidelines:
-- Tone: {}
-- Length: {}
-- Goal: {}
-- Preserve formatting tags if present.
-- Output ONLY a JSON array of 4 strings with no code fences and no conversational filler.
-Format: ["Variation 1", "Variation 2", "Variation 3", "Variation 4"]"#,
-        text, tone_instruction, length_instruction, req.goal
-    );
 
     let client = Client::builder()
         .timeout(std::time::Duration::from_secs(30))
@@ -154,14 +238,14 @@ Format: ["Variation 1", "Variation 2", "Variation 3", "Variation 4"]"#,
         "messages": [
             {
                 "role": "system",
-                "content": "You are a concise sentence rewriting assistant. You must output only a valid JSON array of 4 strings."
+                "content": system_prompt
             },
             {
                 "role": "user",
                 "content": prompt
             }
         ],
-        "temperature": 0.7,
+        "temperature": temperature,
         "max_tokens": 800
     });
 
@@ -258,5 +342,58 @@ mod tests {
         let res = extract_variations_from_text(input);
         assert_eq!(res.len(), 3);
         assert_eq!(res[0], "First sentence");
+    }
+
+    fn request(mode: Option<&str>) -> RewritePassageRequest {
+        RewritePassageRequest {
+            text: "teh quick fox".into(),
+            tone: "natural".into(),
+            length: "same".into(),
+            goal: "clarity".into(),
+            api_key: None,
+            base_url: None,
+            model: None,
+            mode: mode.map(str::to_string),
+            context: Some("The teh quick fox ran home.".into()),
+            dialect: Some("en_GB".into()),
+            protected_terms: Some(vec!["Acme".into(), " ".into()]),
+        }
+    }
+
+    #[test]
+    fn plain_rewrite_prompt_ignores_selection_fields() {
+        let (system, prompt, temp) = build_prompts(&request(None), "teh quick fox");
+        assert!(system.contains("sentence rewriting assistant"));
+        assert!(prompt.starts_with("Rewrite the following single sentence into 4"));
+        assert!(!prompt.contains("Paragraph it comes from"));
+        assert!(!prompt.contains("Acme"));
+        assert_eq!(temp, 0.7);
+    }
+
+    #[test]
+    fn suggest_prompt_carries_context_dialect_and_protected_terms() {
+        let (_, prompt, temp) = build_prompts(&request(Some("suggest")), "teh quick fox");
+        assert!(prompt.contains("4 diverse replacement options"));
+        assert!(prompt.contains("The teh quick fox ran home."));
+        assert!(prompt.contains("British English (-ise, -our)"));
+        assert!(prompt.contains("Copy these terms exactly if they appear: Acme."));
+        assert!(prompt.contains("quotation marks, code in backticks"));
+        assert_eq!(temp, 0.7);
+    }
+
+    #[test]
+    fn polish_prompt_asks_for_one_conservative_edit() {
+        let (system, prompt, temp) = build_prompts(&request(Some("polish")), "teh quick fox");
+        assert!(system.contains("JSON array of 1 string"));
+        assert!(prompt.contains("smallest edit"));
+        assert!(prompt.contains("return it unchanged"));
+        assert!(prompt.contains("exactly 1 string"));
+        assert!(temp < 0.5);
+    }
+
+    #[test]
+    fn unknown_mode_falls_back_to_the_plain_rewrite() {
+        let (_, prompt, _) = build_prompts(&request(Some("other")), "teh quick fox");
+        assert!(prompt.starts_with("Rewrite the following single sentence into 4"));
     }
 }
