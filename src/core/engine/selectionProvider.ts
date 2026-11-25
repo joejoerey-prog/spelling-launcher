@@ -35,7 +35,7 @@ export function isLoopbackUrl(url: string | undefined): boolean {
 }
 
 /** Built-in candidates: Suggest uses the rewrite heuristics, Polish only fixes and wordiness cuts. */
-function localCandidates(req: SelectionRequest): Candidate[] {
+export function localCandidates(req: SelectionRequest): Candidate[] {
   if (req.kind === 'suggest') {
     return generateLocalRewrites('selection', req.text, req.tone, req.length)
       .filter((o) => !FILLER_REWRITE_LABELS.has(o.label))

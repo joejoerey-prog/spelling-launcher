@@ -3,7 +3,7 @@ import { DeterministicIssue, IssueCategory, RewriteOption, RewriteTone, RewriteL
 import { parseDocument, calculateDocumentStats } from '../engine/segmenter';
 import { rewriteSelectedPassage } from '../engine/aiRewriter';
 import { Edit, Piece, SelectionOption, buildOptions, composePieces, finishCandidate, resolveSelection } from '../engine/selectionEdit';
-import { selectionCandidates } from '../engine/selectionProvider';
+import { SelectionCandidates, SelectionRequest, localCandidates, selectionCandidates } from '../engine/selectionProvider';
 import { rulesStore } from './rulesStore';
 import { settingsStore } from './settingsStore';
 import { styleStore } from './styleStore';
@@ -483,20 +483,18 @@ class EditorStore {
       .slice(0, 50);
 
     try {
-      const result = await selectionCandidates(
-        {
-          kind,
-          text: sel.text,
-          paragraph: sel.paragraph,
-          tone: kind === 'suggest' ? this.state.selectedTone : 'natural',
-          length: kind === 'suggest' ? this.state.selectedLength : 'same',
-          goal: kind === 'suggest' ? this.state.selectedGoal : 'clarity',
-          dialect,
-          terms,
-          issueEdits: kind === 'polish' ? this.issueEditsWithin(sel.start, sel.end) : [],
-        },
-        settings
-      );
+      const req: SelectionRequest = {
+        kind,
+        text: sel.text,
+        paragraph: sel.paragraph,
+        tone: kind === 'suggest' ? this.state.selectedTone : 'natural',
+        length: kind === 'suggest' ? this.state.selectedLength : 'same',
+        goal: kind === 'suggest' ? this.state.selectedGoal : 'clarity',
+        dialect,
+        terms,
+        issueEdits: kind === 'polish' ? this.issueEditsWithin(sel.start, sel.end) : [],
+      };
+      let result = await selectionCandidates(req, settings);
 
       const current = this.state.selectionEdit;
       if (!current || current.id !== id) return; // dismissed or replaced while waiting
@@ -505,15 +503,22 @@ class EditorStore {
         this.staleEditNotice();
         return;
       }
-      const first = result.candidates[0];
-      this.state.selectionEdit = {
-        ...current,
-        status: 'ready',
-        isAi: result.isAi,
-        notice: result.notice,
-        options: kind === 'suggest' ? buildOptions(sel.text, result.candidates, { dialect, terms, isAi: result.isAi }) : [],
-        pieces: kind === 'polish' && first ? finishCandidate(sel.text, first.text, dialect, terms) ?? [] : [],
-      };
+
+      const build = (r: SelectionCandidates) => ({
+        options: kind === 'suggest' ? buildOptions(sel.text, r.candidates, { dialect, terms, isAi: r.isAi }) : [],
+        pieces: kind === 'polish' && r.candidates[0] ? finishCandidate(sel.text, r.candidates[0].text, dialect, terms) ?? [] : [],
+      });
+      let built = build(result);
+      if (result.isAi && built.options.length === 0 && built.pieces.length === 0) {
+        // The model answered, but nothing it wrote survived the protected-text checks. That is not "no changes needed".
+        result = {
+          candidates: localCandidates(req),
+          isAi: false,
+          notice: 'The model\u2019s answer could not be used without changing protected text, so the built-in checks were used.',
+        };
+        built = build(result);
+      }
+      this.state.selectionEdit = { ...current, status: 'ready', isAi: result.isAi, notice: result.notice, ...built };
       this.notify();
     } catch (err: any) {
       if (this.state.selectionEdit?.id === id) this.state.selectionEdit = null;

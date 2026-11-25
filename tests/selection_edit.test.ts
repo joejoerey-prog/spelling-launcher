@@ -283,6 +283,45 @@ describe('AI results', () => {
     expect(session()!.options.every((o) => o.rewrittenText.includes('"this bug"'))).toBe(true);
   });
 
+  const mockOllama = async (variations: string[]) => {
+    await settingsStore.update({ provider: 'ollama' });
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ models: [{ name: 'llama3.2:3b' }] })));
+    return vi.spyOn(TauriBridge, 'rewritePassage').mockResolvedValue({ variations, latency_ms: 1, provider: 'Ollama (llama3.2:3b)' });
+  };
+
+  it('Polish: shows the model edit as separate changes when it is usable', async () => {
+    const bridge = await mockOllama(['We met because it rained.']);
+    const raw = 'We met due to the fact that it rained.';
+    await load(raw);
+    await editorStore.startSelectionEdit('polish', { start: 0, end: raw.length });
+    expect(bridge.mock.calls[0][0]).toMatchObject({ mode: 'polish', dialect: 'en_GB', context: raw });
+    expect(session()).toMatchObject({ isAi: true, notice: undefined });
+    expect(session()!.pieces.filter((p) => p.kind === 'change')).toHaveLength(1);
+    editorStore.applyPolish([0]);
+    expect(content()).toBe('We met because it rained.');
+  });
+
+  it('Polish: a model answer that breaks protected text falls back to the built-in checks, not "no changes"', async () => {
+    await mockOllama(['We met because it rained "really".']);
+    const raw = 'We met due to the fact that it rained.';
+    await load(raw);
+    await editorStore.startSelectionEdit('polish', { start: 0, end: raw.length });
+    expect(session()).toMatchObject({ status: 'ready', isAi: false, notice: expect.stringMatching(/could not be used/) });
+    expect(session()!.pieces.filter((p) => p.kind === 'change')).toHaveLength(1);
+    editorStore.applyPolish([0]);
+    expect(content()).toBe('We met because it rained.');
+  });
+
+  it('Suggest: when every model option breaks protected text, the built-in options are offered with a notice', async () => {
+    await mockOllama(['We need to work out how to remove "this bug" and "that bug".']);
+    const raw = 'We need to figure out how to get rid of "this bug".';
+    await load(raw);
+    await editorStore.startSelectionEdit('suggest', { start: 0, end: raw.length });
+    expect(session()).toMatchObject({ status: 'ready', isAi: false, notice: expect.stringMatching(/could not be used/) });
+    expect(session()!.options.length).toBeGreaterThan(0);
+    expect(session()!.options.every((o) => o.rewrittenText.includes('"this bug"') && !o.rewrittenText.includes('that bug'))).toBe(true);
+  });
+
   it('falls back to the built-in suggestions and says why when Ollama is unavailable', async () => {
     await settingsStore.update({ provider: 'ollama' });
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
