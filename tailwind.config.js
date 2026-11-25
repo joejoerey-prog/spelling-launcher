@@ -32,6 +32,17 @@ export default {
         mono: ['Geist Mono Variable', 'Geist Mono', 'JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
         serif: ['Newsreader Variable', 'Newsreader', 'Iowan Old Style', 'New York', 'Georgia', 'serif'],
       },
+      // tailwindcss-animate is not installed, so the old `animate-in` classes did nothing.
+      keyframes: {
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'modal-in': { from: { opacity: '0', transform: 'scale(0.97)' }, to: { opacity: '1', transform: 'scale(1)' } },
+        'toast-in': { from: { opacity: '0', transform: 'translateY(8px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+      },
+      animation: {
+        'fade-in': 'fade-in 150ms cubic-bezier(0.23, 1, 0.32, 1)',
+        'modal-in': 'modal-in 180ms cubic-bezier(0.23, 1, 0.32, 1)',
+        'toast-in': 'toast-in 200ms cubic-bezier(0.23, 1, 0.32, 1)',
+      },
       transitionTimingFunction: { DEFAULT: 'cubic-bezier(0.22, 1, 0.36, 1)' },
     },
   },

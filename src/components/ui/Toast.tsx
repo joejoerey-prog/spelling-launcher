@@ -29,7 +29,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onDismiss,
   };
 
   return (
-    <div className={`${stacked ? '' : 'fixed bottom-6 right-6 z-50'} max-w-md animate-in fade-in slide-in-from-bottom-3 duration-200`}>
+    <div className={`${stacked ? '' : 'fixed bottom-6 right-6 z-50'} max-w-md animate-toast-in`}>
       <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl ${bgStyles[type]}`}>
         {type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
         {type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}

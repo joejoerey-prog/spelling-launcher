@@ -117,14 +117,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fade-in">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-modal-title"
         tabIndex={-1}
-        className="bg-ink-900 border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
+        className="bg-ink-900 border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-modal-in flex flex-col max-h-[90vh] outline-none"
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
@@ -141,7 +141,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-6">
           {/* Unacknowledged Migration Notice */}
           {unacknowledgedMigration && (
-            <div className="p-4 bg-amber-950/40 border border-amber-500/40 rounded-xl space-y-3 animate-in fade-in">
+            <div className="p-4 bg-amber-950/40 border border-amber-500/40 rounded-xl space-y-3 animate-fade-in">
               <div className="flex items-start gap-2.5">
                 <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                 <div className="space-y-1 text-xs">

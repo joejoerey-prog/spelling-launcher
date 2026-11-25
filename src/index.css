@@ -41,6 +41,11 @@ body {
   outline-offset: 2px;
 }
 
+/* Dialogs take focus programmatically; they are containers, not controls, so they get no ring. */
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }

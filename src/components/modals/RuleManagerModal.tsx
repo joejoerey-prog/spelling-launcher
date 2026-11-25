@@ -257,14 +257,14 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fade-in">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="rules-modal-title"
         tabIndex={-1}
-        className="bg-ink-900 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
+        className="bg-ink-900 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-modal-in flex flex-col max-h-[90vh] outline-none"
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
