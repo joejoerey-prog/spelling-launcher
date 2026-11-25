@@ -430,6 +430,8 @@ class EditorStore {
       content = content.slice(0, e.start) + e.text + content.slice(e.end);
     }
     this.setContent(content);
+    // Rewrites were built from the old text; showing them after the edit would offer a stale diff.
+    this.state.rewriteOptions = [];
     this.state.successMessage = message;
     this.pushHistory(content, description);
     await this.refreshAllIssues();

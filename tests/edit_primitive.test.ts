@@ -64,6 +64,14 @@ describe('edit primitive', () => {
     expect(editorStore.getState.historyIndex).toBe(1);
   });
 
+  it('clears rewrite options after an edit so a stale card cannot be accepted twice', async () => {
+    await load('A.\n\nB.');
+    const target = editorStore.getState.document.paragraphs.flatMap((p) => p.sentences).find((s) => s.trimmedText === 'B.')!;
+    editorStore.getState.rewriteOptions = [{ id: 'r1', sentenceId: target.id, rewrittenText: 'B2.' } as any];
+    editorStore.applySentenceRevision(target.id, 'B2.');
+    expect(editorStore.getState.rewriteOptions).toEqual([]);
+  });
+
   it('maps match offsets relative to the trimmed sentence and fixes the right text', async () => {
     const raw = '  Hello wrld.';
     await load(raw, [native(raw, 'wrld', 0, 'world')]);
