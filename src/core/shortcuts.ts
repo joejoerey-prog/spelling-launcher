@@ -11,6 +11,8 @@ export type ShortcutAction =
   | 'export'
   | 'applyAll'
   | 'generateRewrites'
+  | 'suggestSelection'
+  | 'polishSelection'
   | 'toggleRaw'
   | 'openSettings'
   | 'summon';
@@ -26,6 +28,8 @@ export const SHORTCUT_ACTIONS: { id: ShortcutAction; label: string; global?: boo
   { id: 'export', label: 'Export' },
   { id: 'applyAll', label: 'Apply all safe fixes' },
   { id: 'generateRewrites', label: 'Generate rewrites for selected sentence' },
+  { id: 'suggestSelection', label: 'Suggest replacements for highlighted text' },
+  { id: 'polishSelection', label: 'Polish highlighted text' },
   { id: 'toggleRaw', label: 'Toggle raw text view' },
   { id: 'openSettings', label: 'Open settings' },
   { id: 'summon', label: 'Bring Spelling Launcher to front (system-wide)', global: true },
@@ -40,7 +44,9 @@ export const DEFAULT_SHORTCUTS: ShortcutMap = {
   export: 'Command+KeyE',
   applyAll: 'Command+Shift+KeyA',
   generateRewrites: 'Command+KeyR',
-  toggleRaw: 'Command+Shift+KeyR',
+  suggestSelection: 'Command+Shift+KeyR',
+  polishSelection: 'Command+Shift+KeyP',
+  toggleRaw: 'Command+Alt+KeyR', // moved from Command+Shift+KeyR, which Suggest now uses
   openSettings: 'Command+Comma',
   summon: 'Alt+Shift+Space',
 };

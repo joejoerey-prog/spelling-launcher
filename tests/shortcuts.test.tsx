@@ -55,6 +55,37 @@ describe('shortcut helpers', () => {
   });
 });
 
+describe('selection shortcuts', () => {
+  it('default to Suggest on ⇧⌘R and Polish on ⇧⌘P, and no two actions share a default', () => {
+    expect(formatCombo(DEFAULT_SHORTCUTS.suggestSelection)).toBe('⇧⌘R');
+    expect(formatCombo(DEFAULT_SHORTCUTS.polishSelection)).toBe('⇧⌘P');
+    const used = Object.values(DEFAULT_SHORTCUTS).filter(Boolean);
+    expect(new Set(used).size).toBe(used.length);
+    expect(actionForCombo(DEFAULT_SHORTCUTS, 'Command+Shift+KeyR')).toBe('suggestSelection');
+    expect(actionForCombo(DEFAULT_SHORTCUTS, 'Command+Alt+KeyR')).toBe('toggleRaw');
+  });
+
+  it('are conflict-checked against every other action', () => {
+    expect(findConflict(DEFAULT_SHORTCUTS, 'Command+Shift+KeyP', 'save')).toBe('polishSelection');
+    expect(findConflict(DEFAULT_SHORTCUTS, 'Command+KeyS', 'suggestSelection')).toBe('save');
+    expect(findConflict(DEFAULT_SHORTCUTS, 'Command+Shift+KeyR', 'polishSelection')).toBe('suggestSelection');
+    expect(findConflict(DEFAULT_SHORTCUTS, 'Command+Shift+KeyR', 'suggestSelection')).toBeNull();
+  });
+
+  it('can be re-recorded in Settings, with a swap offered on conflict', () => {
+    const onChange = vi.fn();
+    render(<ShortcutSettings value={{ ...DEFAULT_SHORTCUTS }} onChange={onChange} />);
+    const polish = () => screen.getByRole('button', { name: /^Change shortcut for Polish highlighted text/ });
+    fireEvent.click(polish());
+    fireEvent.keyDown(polish(), { code: 'KeyJ', key: 'j', metaKey: true, shiftKey: true });
+    expect(onChange).toHaveBeenCalledWith({ ...DEFAULT_SHORTCUTS, polishSelection: 'Command+Shift+KeyJ' });
+
+    fireEvent.click(polish());
+    fireEvent.keyDown(polish(), { code: 'KeyR', key: 'r', metaKey: true, shiftKey: true });
+    expect(screen.getByRole('alert').textContent).toMatch(/already used by "Suggest replacements for highlighted text"/);
+  });
+});
+
 describe('ShortcutSettings', () => {
   const setup = (value: ShortcutMap = { ...DEFAULT_SHORTCUTS }) => {
     const onChange = vi.fn();
@@ -120,7 +151,7 @@ describe('configured shortcuts drive the app', () => {
     expect(screen.getByRole('dialog', { name: 'Settings' })).toBeTruthy();
     fireEvent.keyDown(window, { key: 'Escape' });
 
-    fireEvent.keyDown(document.body, { code: 'KeyR', key: 'r', metaKey: true, shiftKey: true });
+    fireEvent.keyDown(document.body, { code: 'KeyR', key: '®', metaKey: true, altKey: true });
     expect(document.querySelector('textarea')).toBeTruthy();
   });
 
