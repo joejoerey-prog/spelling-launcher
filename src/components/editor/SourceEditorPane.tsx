@@ -21,12 +21,12 @@ const UNDERLINE_BY_CATEGORY = (category: DeterministicIssue['category']): string
     case 'passive':
     case 'style':
     case 'length':
-      return 'underline decoration-slate-400 decoration-dotted decoration-2 underline-offset-4';
+      return 'underline decoration-ink-400 decoration-dotted decoration-2 underline-offset-4';
     case 'punctuation':
     case 'typography':
-      return 'underline decoration-slate-400 decoration-dotted decoration-2 underline-offset-4';
+      return 'underline decoration-ink-400 decoration-dotted decoration-2 underline-offset-4';
     default:
-      return 'underline decoration-slate-400 decoration-solid decoration-2 underline-offset-4';
+      return 'underline decoration-ink-400 decoration-solid decoration-2 underline-offset-4';
   }
 };
 
@@ -202,7 +202,7 @@ export const SourceEditorPane: React.FC = () => {
   return (
     <div
       className={`flex-1 flex flex-col overflow-hidden relative transition-colors ${
-        isDragging ? 'ring-1 ring-sky-500 bg-slate-850' : ''
+        isDragging ? 'ring-1 ring-accent-500 bg-ink-850' : ''
       }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -210,10 +210,10 @@ export const SourceEditorPane: React.FC = () => {
     >
       {/* Drag Overlay */}
       {isDragging && (
-        <div className="absolute inset-0 z-30 bg-slate-900 flex flex-col items-center justify-center p-6 border border-dashed border-sky-500 rounded-xl m-2 pointer-events-none">
-          <UploadCloud className="w-10 h-10 text-slate-400 mb-3" />
-          <h3 className="text-base font-medium text-slate-100">Drop a document to open it</h3>
-          <p className="text-xs text-slate-400 mt-1">
+        <div className="absolute inset-0 z-30 bg-ink-900 flex flex-col items-center justify-center p-6 border border-dashed border-accent-500 rounded-xl m-2 pointer-events-none">
+          <UploadCloud className="w-10 h-10 text-ink-400 mb-3" />
+          <h3 className="text-base font-medium text-ink-100">Drop a document to open it</h3>
+          <p className="text-xs text-ink-400 mt-1">
             PDF, Pages, Word, Markdown or plain text
           </p>
         </div>
@@ -221,21 +221,23 @@ export const SourceEditorPane: React.FC = () => {
 
       {/* Loading Overlay for extraction */}
       {isExtracting && (
-        <div className="absolute inset-0 z-30 bg-slate-900 flex flex-col items-center justify-center p-6 space-y-3 pointer-events-none">
-          <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-          <p className="text-sm font-medium text-slate-200">Reading document</p>
+        <div className="absolute inset-0 z-30 bg-ink-900 flex flex-col items-center justify-center p-6 space-y-3 pointer-events-none">
+          <Loader2 className="w-8 h-8 text-ink-400 animate-spin" />
+          <p className="text-sm font-medium text-ink-200">Reading document</p>
         </div>
       )}
 
       {/* Pane Header */}
-      <div className="h-10 border-b border-white/10 bg-slate-900 px-4 flex items-center justify-between text-xs font-medium text-slate-300 select-none shrink-0">
+      <div className="h-10 border-b border-white/10 bg-ink-900 px-4 flex items-center justify-between text-xs font-medium text-ink-300 select-none shrink-0">
         <div className="flex items-center gap-2">
-          <Edit3 className="w-4 h-4 text-slate-500" />
+          <Edit3 className="w-4 h-4 text-ink-500" />
           <span>Document</span>
         </div>
-        <span className="text-xs font-normal text-slate-500">
-          Select a sentence to check it
-        </span>
+        {!state.selectedSentenceId && (
+          <span className="text-xs font-normal text-ink-500">
+            Select a sentence to check it
+          </span>
+        )}
       </div>
 
       <Toolbar
@@ -246,12 +248,12 @@ export const SourceEditorPane: React.FC = () => {
       />
 
       {/* Editor Content Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 font-serif text-slate-200 leading-8 text-[17px]">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 font-serif text-ink-200 leading-8 text-[17px]">
         {rawMode ? (
           <textarea
             value={state.document.rawContent}
             onChange={handleRawChange}
-            className="w-full h-full min-h-[400px] bg-transparent text-slate-100 font-mono text-sm leading-relaxed outline-none resize-none"
+            className="w-full h-full min-h-[400px] bg-transparent text-ink-100 font-mono text-sm leading-relaxed outline-none resize-none"
             placeholder="Type or paste text"
             autoFocus
           />
@@ -265,7 +267,7 @@ export const SourceEditorPane: React.FC = () => {
               return (
                 <pre
                   key={para.id}
-                  className="bg-slate-950 p-4 rounded-lg font-mono text-xs text-slate-300 border border-white/10 overflow-x-auto my-3"
+                  className="bg-ink-950 p-4 rounded-lg font-mono text-xs text-ink-300 border border-white/10 overflow-x-auto my-3"
                 >
                   {para.rawText}
                 </pre>
@@ -286,12 +288,12 @@ export const SourceEditorPane: React.FC = () => {
                   const hasPunctuation = issues.some((i) => i.category === 'punctuation' || i.category === 'typography');
 
                   let textStyles =
-                    'cursor-pointer px-1 py-0.5 rounded transition-colors duration-150 inline focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ';
+                    'cursor-pointer px-1 py-0.5 rounded transition-colors duration-150 inline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 ';
                   if (isSelected) {
-                    textStyles += 'bg-sky-500/10 text-slate-100 ring-1 ring-sky-500/50 ';
+                    textStyles += 'bg-accent-500/10 text-ink-100 ring-1 ring-accent-500/50 ';
                   } else {
                     // Only the offending words are underlined; the sentence itself is not tinted.
-                    textStyles += 'hover:bg-slate-800 text-slate-200 ';
+                    textStyles += 'hover:bg-ink-800 text-ink-200 ';
                   }
 
                   const issueTooltip = hasIssues
@@ -303,10 +305,10 @@ export const SourceEditorPane: React.FC = () => {
                     : hasGrammar
                     ? 'text-amber-400'
                     : hasWordiness
-                    ? 'text-slate-400'
+                    ? 'text-ink-400'
                     : hasPunctuation
-                    ? 'text-slate-400'
-                    : 'text-slate-400';
+                    ? 'text-ink-400'
+                    : 'text-ink-400';
 
                   return (
                     <span

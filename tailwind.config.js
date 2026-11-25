@@ -1,11 +1,11 @@
 /** @type {import('tailwindcss').Config} */
-// Graphite neutrals, one ochre accent (sky), muted green for "fixed", default amber/rose for warning/error.
+// Graphite neutrals, one ochre accent (accent-*), muted green for "fixed", default amber/rose for warning/error.
 const graphite = {
   50: '#f7f7f8', 100: '#ededed', 200: '#dcdcdf', 300: '#c4c4c8', 400: '#a1a1a6',
   500: '#85858b', 600: '#4a4a4e', 700: '#2f2f32', 800: '#232325', 850: '#19191b',
   900: '#141415', 950: '#0f0f10',
 };
-const ochre = {
+const accent = {
   50: '#faf5e8', 100: '#f3e8c8', 200: '#ecd9a6', 300: '#e3c783', 400: '#d8b25c',
   500: '#c99a3c', 600: '#a07f35', 700: '#78602a', 800: '#54421f', 900: '#3a2e18', 950: '#241c0e',
 };
@@ -22,12 +22,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        slate: graphite,
-        indigo: graphite,
-        purple: graphite,
-        sky: ochre,
-        primary: ochre,
-        orange: ochre,
+        ink: graphite,
+        accent,
         emerald: green,
         teal: green,
       },

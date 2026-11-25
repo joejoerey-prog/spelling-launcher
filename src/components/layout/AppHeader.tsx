@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import {
   FileText,
+  FilePlus,
   FolderOpen,
   Save,
   Download,
@@ -139,7 +140,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   });
 
   return (
-    <header className="h-14 border-b border-white/10 bg-slate-900 px-4 flex items-center justify-between shrink-0 select-none">
+    <header className="h-14 border-b border-white/10 bg-ink-900 px-4 flex items-center justify-between shrink-0 select-none">
       {/* Hidden file input supporting PDF, Apple Pages, DOCX, and Markdown/Text */}
       <input
         type="file"
@@ -150,50 +151,50 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       />
 
       {/* Brand & Document Name */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <ChevronUp className="w-4 h-4 text-sky-400" strokeWidth={2} />
-          <span className="font-medium text-base text-slate-100">Spelling Launcher</span>
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
+          <ChevronUp className="w-4 h-4 text-accent-400" strokeWidth={2} />
+          <span className="font-medium text-base text-ink-100">Spelling Launcher</span>
         </div>
 
-        <div className="h-5 w-px bg-slate-800" />
+        <div className="h-5 w-px bg-ink-800" />
 
-        <div className="flex items-center gap-2 text-sm text-slate-300">
-          <FileText className="w-4 h-4 text-slate-500" />
-          <span className="font-medium truncate max-w-xs">{state.document.fileName}</span>
+        <div className="flex items-center gap-2 text-sm text-ink-300 min-w-0">
+          <FileText className="w-4 h-4 text-ink-500" />
+          <span className="font-medium truncate max-w-[10rem] xl:max-w-xs">{state.document.fileName}</span>
           {isOpeningFile ? (
-            <span className="flex items-center gap-1 text-xs text-slate-400">
+            <span className="flex items-center gap-1 text-xs text-ink-400">
               <Loader2 className="w-3 h-3 animate-spin" /> Reading document
             </span>
           ) : state.document.isDirty ? (
-            <span className="w-2 h-2 rounded-full bg-sky-400" title="Unsaved changes" />
+            <span className="w-2 h-2 rounded-full bg-accent-400" title="Unsaved changes" />
           ) : null}
         </div>
       </div>
 
       {/* Document & History Actions */}
       <div className="flex items-center gap-1.5">
-        <Button variant="ghost" size="sm" onClick={handleNewDocument} title={withKey('New document', 'newDocument')}>
-          New
+        <Button variant="ghost" size="sm" icon={<FilePlus className="w-4 h-4" />} onClick={handleNewDocument} title={withKey('New document', 'newDocument')}>
+          <span className="hidden xl:inline">New</span>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          icon={isOpeningFile ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : <FolderOpen className="w-4 h-4" />}
+          icon={isOpeningFile ? <Loader2 className="w-4 h-4 animate-spin text-ink-400" /> : <FolderOpen className="w-4 h-4" />}
           onClick={handleOpenFileClick}
           disabled={isOpeningFile}
           title={withKey('Open document (.pdf, .pages, .docx, .md, .txt)', 'open')}
         >
-          {isOpeningFile ? 'Opening' : 'Open'}
+          <span className="hidden xl:inline">{isOpeningFile ? 'Opening' : 'Open'}</span>
         </Button>
         <Button variant="ghost" size="sm" icon={<Save className="w-4 h-4" />} onClick={() => editorStore.saveCurrentDocument()} title={withKey('Save document', 'save')}>
-          Save
+          <span className="hidden xl:inline">Save</span>
         </Button>
         <Button variant="ghost" size="sm" icon={<Download className="w-4 h-4" />} onClick={onOpenExport} title={withKey('Export document', 'export')}>
-          Export
+          <span className="hidden xl:inline">Export</span>
         </Button>
 
-        <div className="h-5 w-px bg-slate-800 mx-1" />
+        <div className="h-5 w-px bg-ink-800 mx-1" />
 
         <Button
           variant="ghost"
@@ -216,13 +217,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
         {eligibleCount > 0 && onOpenApplyAll && (
           <>
-            <div className="h-5 w-px bg-slate-800 mx-1" />
+            <div className="h-5 w-px bg-ink-800 mx-1" />
             <Button
               variant="secondary"
               size="sm"
               icon={<CheckCheck className="w-4 h-4" />}
               onClick={onOpenApplyAll}
-              className="text-sky-300 border-sky-500/30"
+              className="text-accent-300 border-accent-500/30"
               title={withKey('Review and apply all verified safe fixes', 'applyAll')}
             >
               Apply safe fixes ({eligibleCount})
@@ -230,13 +231,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </>
         )}
 
-        <div className="h-5 w-px bg-slate-800 mx-1" />
+        <div className="h-5 w-px bg-ink-800 mx-1" />
 
         <Button variant="ghost" size="sm" icon={<BookOpen className="w-4 h-4" />} onClick={onOpenRules} title="Rules and custom terms">
-          Rules
+          <span className="hidden xl:inline">Rules</span>
         </Button>
         <Button variant="ghost" size="sm" icon={<SlidersHorizontal className="w-4 h-4" />} onClick={onOpenSettings} title={withKey('Settings', 'openSettings')}>
-          Settings
+          <span className="hidden xl:inline">Settings</span>
         </Button>
       </div>
     </header>

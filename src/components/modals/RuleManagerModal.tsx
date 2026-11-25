@@ -264,27 +264,27 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
         aria-modal="true"
         aria-labelledby="rules-modal-title"
         tabIndex={-1}
-        className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
+        className="bg-ink-900 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] outline-none"
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <BookOpen className="w-5 h-5 text-slate-400" />
-            <h2 id="rules-modal-title" className="text-base font-medium text-slate-100">Rules and dictionary</h2>
+            <BookOpen className="w-5 h-5 text-ink-400" />
+            <h2 id="rules-modal-title" className="text-base font-medium text-ink-100">Rules and dictionary</h2>
           </div>
-          <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <button onClick={onClose} aria-label="Close modal" className="p-1 rounded-lg text-ink-400 hover:text-white hover:bg-ink-800">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-white/10 bg-slate-850 px-6 gap-4 text-xs font-medium">
+        <div className="flex border-b border-white/10 bg-ink-850 px-6 gap-4 text-xs font-medium">
           <button
             onClick={() => setActiveTab('rules')}
             className={`py-3 border-b-2 transition-colors ${
               activeTab === 'rules'
-                ? 'border-sky-500 text-slate-100'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-accent-500 text-ink-100'
+                : 'border-transparent text-ink-400 hover:text-ink-200'
             }`}
           >
             Custom Linguistic Rules ({rules.length})
@@ -293,8 +293,8 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
             onClick={() => setActiveTab('dictionary')}
             className={`py-3 border-b-2 transition-colors ${
               activeTab === 'dictionary'
-                ? 'border-sky-500 text-slate-100'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-accent-500 text-ink-100'
+                : 'border-transparent text-ink-400 hover:text-ink-200'
             }`}
           >
             Ignored Terms Dictionary ({ignoredList.length})
@@ -303,8 +303,8 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
             onClick={() => setActiveTab('learned_style')}
             className={`py-3 border-b-2 transition-colors ${
               activeTab === 'learned_style'
-                ? 'border-sky-500 text-slate-100'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-accent-500 text-ink-100'
+                : 'border-transparent text-ink-400 hover:text-ink-200'
             }`}
           >
             Learned Style & Words ({suppressedRules.length + learnedWords.length})
@@ -312,7 +312,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-sm text-slate-300">
+        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-sm text-ink-300">
           {error && (
             <div role="alert" className="p-2.5 rounded-lg bg-rose-950/60 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -322,15 +322,15 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
           {activeTab === 'rules' && (
             <>
               {/* LanguageTool Starter Pack Banner */}
-              <div className="p-4 bg-indigo-950/30 rounded-xl border border-indigo-500/20 flex items-center justify-between gap-4">
+              <div className="p-4 bg-ink-950/30 rounded-xl border border-ink-500/20 flex items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium text-xs text-slate-100">
+                    <Sparkles className="w-4 h-4 text-ink-400" />
+                    <span className="font-medium text-xs text-ink-100">
                       LanguageTool Plain English Starter Pack
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-normal">
+                  <p className="text-xs text-ink-400 leading-normal">
                     Import curated Plain English rules for replacing corporate jargon, clichés, and wordiness into your local database.
                   </p>
                   {starterPackSuccess && (
@@ -344,7 +344,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                   size="sm"
                   onClick={handleLoadStarterPack}
                   disabled={isImporting}
-                  className="shrink-0 text-xs px-3 py-1.5 bg-slate-100 hover:bg-white text-slate-900"
+                  className="shrink-0 text-xs px-3 py-1.5 bg-ink-100 hover:bg-white text-ink-900"
                 >
                   <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                   {isImporting ? 'Importing...' : 'Load rules pack'}
@@ -352,30 +352,30 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
               </div>
 
               {/* Add Rule Form */}
-              <form onSubmit={handleAddRule} className="p-4 bg-slate-850 rounded-xl border border-white/10 space-y-3">
-                <div className="font-medium text-xs text-slate-200 flex items-center gap-1.5">
-                  <Plus className="w-3.5 h-3.5 text-slate-400" /> New rule
+              <form onSubmit={handleAddRule} className="p-4 bg-ink-850 rounded-xl border border-white/10 space-y-3">
+                <div className="font-medium text-xs text-ink-200 flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5 text-ink-400" /> New rule
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label htmlFor="rule-name" className="text-xs text-slate-400">Rule name</label>
+                    <label htmlFor="rule-name" className="text-xs text-ink-400">Rule name</label>
                     <input
                       id="rule-name"
                       type="text"
                       value={ruleName}
                       onChange={(e) => setRuleName(e.target.value)}
                       placeholder="e.g. Avoid 'In terms of'"
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
+                      className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-ink-100 focus:outline-none focus:border-accent-500"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="rule-category" className="text-xs text-slate-400">Category</label>
+                    <label htmlFor="rule-category" className="text-xs text-ink-400">Category</label>
                     <select
                       id="rule-category"
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
+                      className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-ink-100 focus:outline-none focus:border-accent-500"
                     >
                       <option value="clarity">Clarity</option>
                       <option value="conciseness">Conciseness</option>
@@ -388,38 +388,38 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label htmlFor="rule-pattern" className="text-xs text-slate-400">Pattern (Regex / Text)</label>
+                    <label htmlFor="rule-pattern" className="text-xs text-ink-400">Pattern (Regex / Text)</label>
                     <input
                       id="rule-pattern"
                       type="text"
                       value={pattern}
                       onChange={(e) => setPattern(e.target.value)}
                       placeholder="e.g. \bin terms of\b"
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-sky-500"
+                      className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs font-mono text-ink-100 focus:outline-none focus:border-accent-500"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="rule-replacement" className="text-xs text-slate-400">Replacement</label>
+                    <label htmlFor="rule-replacement" className="text-xs text-ink-400">Replacement</label>
                     <input
                       id="rule-replacement"
                       type="text"
                       value={replacement}
                       onChange={(e) => setReplacement(e.target.value)}
                       placeholder="e.g. regarding"
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-sky-500"
+                      className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs font-mono text-ink-100 focus:outline-none focus:border-accent-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor="rule-description" className="text-xs text-slate-400">Description (Optional)</label>
+                  <label htmlFor="rule-description" className="text-xs text-ink-400">Description (Optional)</label>
                   <input
                     id="rule-description"
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Short advice explaining the change..."
-                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
+                    className="w-full bg-ink-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-ink-100 focus:outline-none focus:border-accent-500"
                   />
                 </div>
 
@@ -432,12 +432,12 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
 
               {/* Rules List */}
               <div className="space-y-3">
-                <div className="font-medium text-xs text-slate-400">
+                <div className="font-medium text-xs text-ink-400">
                   Active Rules ({rules.filter((r) => r.is_active).length} of {rules.length})
                 </div>
 
                 {rules.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-xs border border-dashed border-white/10 rounded-xl">
+                  <div className="text-center py-8 text-ink-500 text-xs border border-dashed border-white/10 rounded-xl">
                     No custom rules configured yet. Click "Load rules pack" above to get started!
                   </div>
                 ) : (
@@ -447,24 +447,24 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                         key={rule.id}
                         className={`p-3 rounded-xl border transition-colors flex items-center justify-between gap-3 ${
                           rule.is_active
-                            ? 'bg-slate-850 border-white/10 text-slate-200'
-                            : 'bg-slate-850 border-white/5 text-slate-500 opacity-60'
+                            ? 'bg-ink-850 border-white/10 text-ink-200'
+                            : 'bg-ink-850 border-white/5 text-ink-500 opacity-60'
                         }`}
                       >
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-xs text-slate-200 truncate">{rule.name}</span>
-                            <span className="text-xs px-1.5 py-0.2 bg-slate-800 text-slate-400 rounded font-mono">
+                            <span className="font-medium text-xs text-ink-200 truncate">{rule.name}</span>
+                            <span className="text-xs px-1.5 py-0.2 bg-ink-800 text-ink-400 rounded font-mono">
                               {rule.category}
                             </span>
                           </div>
-                          <div className="text-xs font-mono text-slate-400 flex items-center gap-2 truncate">
+                          <div className="text-xs font-mono text-ink-400 flex items-center gap-2 truncate">
                             <span className="text-rose-400/80">{rule.pattern}</span>
                             <span>→</span>
                             <span className="text-emerald-400/80">{rule.replacement || '(remove)'}</span>
                           </div>
                           {rule.description && (
-                            <p className="text-xs text-slate-500 truncate">{rule.description}</p>
+                            <p className="text-xs text-ink-500 truncate">{rule.description}</p>
                           )}
                         </div>
 
@@ -475,7 +475,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                             aria-label={`${rule.is_active ? 'Disable' : 'Enable'} rule ${rule.name}`}
                             onClick={() => handleToggle(rule)}
                             className={`w-9 h-5 flex items-center rounded-full p-0.5 cursor-pointer transition-colors ${
-                              rule.is_active ? 'bg-sky-500' : 'bg-slate-700'
+                              rule.is_active ? 'bg-accent-500' : 'bg-ink-700'
                             }`}
                           >
                             <div
@@ -486,7 +486,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                           </button>
                           <button
                             onClick={() => handleDelete(rule.id)}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg transition-colors"
+                            className="p-1.5 text-ink-500 hover:text-rose-400 rounded-lg transition-colors"
                             title="Delete rule"
                             aria-label={`Delete rule ${rule.name}`}
                           >
@@ -512,7 +512,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                   onKeyDown={(e) => e.key === 'Enter' && handleAddIgnored()}
                   aria-label="Term to ignore"
                   placeholder="Add custom word, acronym or brand to ignore..."
-                  className="flex-1 bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
+                  className="flex-1 bg-ink-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-ink-100 focus:outline-none focus:border-accent-500"
                 />
                 <Button variant="secondary" size="sm" onClick={handleAddIgnored} className="text-xs px-3">
                   <Plus className="w-3.5 h-3.5 mr-1" /> Add Term
@@ -521,7 +521,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
 
               <div className="space-y-2">
                 {ignoredList.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-xs border border-dashed border-white/10 rounded-xl">
+                  <div className="text-center py-8 text-ink-500 text-xs border border-dashed border-white/10 rounded-xl">
                     No ignored terms. Words flagged for repetition can be added here.
                   </div>
                 ) : (
@@ -529,13 +529,13 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                     {ignoredList.map((item) => (
                       <span
                         key={item.id}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 text-xs font-mono border border-white/10/60"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-ink-800 text-ink-200 text-xs font-mono border border-white/10/60"
                       >
                         <span>{item.term}</span>
                         <button
                           onClick={() => handleRemoveIgnored(item.id, item.term)}
                           aria-label={`Remove ignored term ${item.term}`}
-                          className="text-slate-400 hover:text-rose-400"
+                          className="text-ink-400 hover:text-rose-400"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -551,16 +551,16 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
             /* Learned Style & Words Tab */
             <div className="space-y-6">
               {/* Feedback-driven rule suppression */}
-              <div className="p-4 bg-slate-850 rounded-xl border border-white/10 space-y-3">
+              <div className="p-4 bg-ink-850 rounded-xl border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <Cpu className="w-4 h-4 text-slate-400" />
-                      <span className="font-medium text-xs text-slate-200">
+                      <Cpu className="w-4 h-4 text-ink-400" />
+                      <span className="font-medium text-xs text-ink-200">
                         Feedback-Driven Style Suppression (Phase 6)
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-ink-400">
                       When you dismiss/ignore a rule suggestion 3 times, the engine learns your preference and suppresses the rule automatically.
                     </p>
                   </div>
@@ -569,7 +569,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                       variant="secondary"
                       size="sm"
                       onClick={handleResetAllSuppressed}
-                      className="text-xs px-2.5 py-1 text-slate-300 hover:text-white"
+                      className="text-xs px-2.5 py-1 text-ink-300 hover:text-white"
                     >
                       <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset All
                     </Button>
@@ -577,12 +577,12 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                 </div>
 
                 {suppressedRules.length === 0 ? (
-                  <div className="text-center py-6 text-slate-500 text-xs border border-dashed border-white/10 rounded-lg">
+                  <div className="text-center py-6 text-ink-500 text-xs border border-dashed border-white/10 rounded-lg">
                     No rules are currently auto-suppressed. Dismissing any suggestion 3 times will silence it here.
                   </div>
                 ) : (
                   <div className="space-y-2 pt-1">
-                    <div className="text-xs font-medium text-slate-400">
+                    <div className="text-xs font-medium text-ink-400">
                       Suppressed Rules ({suppressedRules.length})
                     </div>
                     {suppressedRules.map((ruleId) => {
@@ -590,11 +590,11 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                       return (
                         <div
                           key={ruleId}
-                          className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900 border border-white/10 text-xs"
+                          className="flex items-center justify-between p-2.5 rounded-lg bg-ink-900 border border-white/10 text-xs"
                         >
                           <div className="flex items-center gap-2">
                             <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                            <span className="font-mono text-slate-200">{ruleId}</span>
+                            <span className="font-mono text-ink-200">{ruleId}</span>
                             <span className="text-xs px-1.5 py-0.5 bg-amber-950/60 border border-amber-500/30 text-amber-300 rounded">
                               {count} rejections
                             </span>
@@ -616,7 +616,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                 {/* Rules approaching suppression threshold */}
                 {Object.entries(ruleRejections).filter(([id, cnt]) => cnt > 0 && cnt < 3 && !suppressedRules.includes(id)).length > 0 && (
                   <div className="pt-2 space-y-1.5 border-t border-white/10/60">
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-ink-500">
                       Rules approaching auto-suppression threshold:
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -625,7 +625,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                         .map(([id, cnt]) => (
                           <span
                             key={id}
-                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900 border border-white/10 text-xs text-slate-400 font-mono"
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-ink-900 border border-white/10 text-xs text-ink-400 font-mono"
                           >
                             <span>{id}</span>
                             <span className="text-amber-400 font-medium">({cnt}/3)</span>
@@ -637,15 +637,15 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
               </div>
 
               {/* Learned Words */}
-              <div className="p-4 bg-slate-850 rounded-xl border border-white/10 space-y-3">
+              <div className="p-4 bg-ink-850 rounded-xl border border-white/10 space-y-3">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium text-xs text-slate-200">
+                    <BookOpen className="w-4 h-4 text-ink-400" />
+                    <span className="font-medium text-xs text-ink-200">
                       Learned Words
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-ink-400">
                     Words added here are remembered by Spelling Launcher only (the app's own ignored-words list) and will no longer be flagged as typos in your documents. They are not added to the macOS system dictionary.
                   </p>
                 </div>
@@ -658,7 +658,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
                     onKeyDown={(e) => e.key === 'Enter' && handleAddLearnedWord()}
                     aria-label="Word to learn"
                     placeholder="Add a custom word to learn..."
-                    className="flex-1 bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-sky-500"
+                    className="flex-1 bg-ink-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-ink-100 focus:outline-none focus:border-accent-500"
                   />
                   <Button variant="secondary" size="sm" onClick={handleAddLearnedWord} className="text-xs px-3">
                     <Plus className="w-3.5 h-3.5 mr-1" /> Learn Word
@@ -667,7 +667,7 @@ export const RuleManagerModal: React.FC<RuleManagerModalProps> = ({ isOpen, onCl
 
                 <div className="space-y-2">
                   {learnedWords.length === 0 ? (
-                    <div className="text-center py-6 text-slate-500 text-xs border border-dashed border-white/10 rounded-lg">
+                    <div className="text-center py-6 text-ink-500 text-xs border border-dashed border-white/10 rounded-lg">
                       No learned words yet. Use "Learn" on spelling suggestions in the editor to add one.
                     </div>
                   ) : (

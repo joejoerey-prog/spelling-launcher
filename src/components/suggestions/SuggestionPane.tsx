@@ -29,16 +29,16 @@ export const SuggestionPane: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Pane Header */}
-      <div className="h-10 border-b border-white/10 bg-slate-900 px-4 flex items-center justify-between text-xs font-medium text-slate-300 select-none shrink-0">
+      <div className="h-10 border-b border-white/10 bg-ink-900 px-4 flex items-center justify-between text-xs font-medium text-ink-300 select-none shrink-0">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-slate-500" />
+          <Sparkles className="w-4 h-4 text-ink-500" />
           <span>Suggestions</span>
         </div>
         {sentence && (
           <button
             onClick={handleRegenerate}
             disabled={state.isLoadingRewrites}
-            className="flex items-center gap-1 text-xs font-normal text-slate-400 hover:text-slate-100 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1 text-xs font-normal text-ink-400 hover:text-ink-100 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3 h-3 ${state.isLoadingRewrites ? 'animate-spin' : ''}`} />
             Refresh
@@ -51,12 +51,12 @@ export const SuggestionPane: React.FC = () => {
         {!sentence ? (
           /* Empty State */
           <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-            <div className="w-12 h-12 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400">
+            <div className="w-12 h-12 rounded-xl bg-ink-800 border border-white/10 flex items-center justify-center text-ink-400">
               <MessageSquare className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="font-medium text-sm text-slate-200">No sentence selected</h3>
-              <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+              <h3 className="font-medium text-sm text-ink-200">No sentence selected</h3>
+              <p className="text-xs text-ink-400 max-w-xs leading-relaxed">
                 Select a sentence in the editor to see its checks and rewrite options.
               </p>
             </div>
@@ -64,12 +64,12 @@ export const SuggestionPane: React.FC = () => {
         ) : (
           <>
             {/* Active Sentence Preview Box */}
-            <div className="p-3.5 bg-slate-850 rounded-xl border border-sky-500/40 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+            <div className="p-3.5 bg-ink-850 rounded-xl border border-accent-500/40 space-y-2">
+              <div className="flex items-center justify-between text-xs text-ink-400 font-medium">
                 <span>Selected sentence</span>
                 <span>{sentence.trimmedText.split(/\s+/).filter(Boolean).length} words</span>
               </div>
-              <p className="text-[15px] font-serif text-slate-100 leading-7">
+              <p className="text-[15px] font-serif text-ink-100 leading-7">
                 {sentence.trimmedText}
               </p>
             </div>
@@ -77,7 +77,7 @@ export const SuggestionPane: React.FC = () => {
             {/* Deterministic Issues (if any) */}
             {state.activeSentenceIssues.length > 0 && (
               <div className="space-y-2">
-                <div className="text-xs font-medium text-slate-400">
+                <div className="text-xs font-medium text-ink-400">
                   Checks ({state.activeSentenceIssues.length})
                 </div>
                 <div className="space-y-2">
@@ -93,14 +93,14 @@ export const SuggestionPane: React.FC = () => {
 
             {/* Side-by-side Rewrite Variations */}
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+              <div className="flex items-center justify-between text-xs font-medium text-ink-400">
                 <span>Rewrites</span>
                 <div className="flex items-center gap-2">
                   <span>{state.rewriteOptions.length} options</span>
                   {state.rewriteOptions.length > 0 && (
                     <button
                       onClick={handleRegenerate}
-                      className="text-xs text-slate-400 hover:text-slate-100 flex items-center gap-1"
+                      className="text-xs text-ink-400 hover:text-ink-100 flex items-center gap-1"
                       title="Regenerate rewrites"
                     >
                       <RefreshCw className="w-3 h-3" />
@@ -114,9 +114,9 @@ export const SuggestionPane: React.FC = () => {
                 /* Loading Skeleton */
                 <div className="space-y-2.5">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="p-4 bg-slate-850 rounded-xl border border-white/10 space-y-2">
-                      <div className="h-3 w-1/3 bg-slate-700/50 rounded" />
-                      <div className="h-4 w-full bg-slate-700/30 rounded" />
+                    <div key={i} className="p-4 bg-ink-850 rounded-xl border border-white/10 space-y-2">
+                      <div className="h-3 w-1/3 bg-ink-700/50 rounded" />
+                      <div className="h-4 w-full bg-ink-700/30 rounded" />
                     </div>
                   ))}
                 </div>
@@ -127,8 +127,8 @@ export const SuggestionPane: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 text-center rounded-xl bg-slate-850 border border-white/10 space-y-3">
-                  <p className="text-xs text-slate-400">
+                <div className="p-4 text-center rounded-xl bg-ink-850 border border-white/10 space-y-3">
+                  <p className="text-xs text-ink-400">
                     No rewrites yet for this sentence.
                   </p>
                   <Button
@@ -146,7 +146,7 @@ export const SuggestionPane: React.FC = () => {
 
             {/* Quick Custom Rewrite Input */}
             <div className="pt-2 border-t border-white/10 space-y-2">
-              <span className="text-xs font-medium text-slate-400">
+              <span className="text-xs font-medium text-ink-400">
                 Custom edit
               </span>
               <div className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export const SuggestionPane: React.FC = () => {
                   onKeyDown={(e) => e.key === 'Enter' && handleCustomApply()}
                   aria-label="Custom edit text"
                   placeholder="Your own version"
-                  className="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus-visible:border-sky-500"
+                  className="flex-1 bg-ink-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-ink-100 placeholder-ink-500 focus:outline-none focus-visible:border-accent-500"
                 />
                 <Button
                   variant="secondary"

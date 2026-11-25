@@ -25,7 +25,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onDismiss,
   const bgStyles = {
     success: 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200',
     error: 'bg-rose-950/90 border-rose-500/40 text-rose-200',
-    info: 'bg-slate-800/95 border-white/10 text-slate-200',
+    info: 'bg-ink-800/95 border-white/10 text-ink-200',
   };
 
   return (
@@ -42,7 +42,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type = 'info', onDismiss,
             <RefreshCw className="w-3 h-3" /> Retry
           </button>
         )}
-        <button onClick={onDismiss} aria-label="Dismiss notification" className="p-1 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/10 transition-colors">
+        <button onClick={onDismiss} aria-label="Dismiss notification" className="p-1 text-ink-400 hover:text-ink-200 rounded-lg hover:bg-white/10 transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>

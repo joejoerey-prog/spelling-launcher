@@ -29,10 +29,10 @@ export const ToneLengthSelector: React.FC = () => {
   };
 
   return (
-    <div className="space-y-2 p-3 bg-slate-850 rounded-xl border border-white/10 text-xs">
+    <div className="space-y-2 p-3 bg-ink-850 rounded-xl border border-white/10 text-xs">
       {/* Tone selection */}
       <div className="flex items-center justify-between gap-1 flex-wrap">
-        <span className="text-xs font-medium text-slate-400">
+        <span className="text-xs font-medium text-ink-400">
           Tone
         </span>
         <div className="flex items-center gap-1 flex-wrap">
@@ -44,8 +44,8 @@ export const ToneLengthSelector: React.FC = () => {
                 onClick={() => handleToneSelect(t.id)}
                 className={`px-2 py-1 rounded-md text-xs font-medium transition-colors ${
                   active
-                    ? 'bg-slate-100 text-slate-900'
-                    : 'bg-slate-800 text-slate-300 hover:text-slate-100 hover:bg-slate-700'
+                    ? 'bg-ink-100 text-ink-900'
+                    : 'bg-ink-800 text-ink-300 hover:text-ink-100 hover:bg-ink-700'
                 }`}
               >
                 {t.label}
@@ -57,7 +57,7 @@ export const ToneLengthSelector: React.FC = () => {
 
       {/* Length selection */}
       <div className="flex items-center justify-between gap-1">
-        <span className="text-xs font-medium text-slate-400">
+        <span className="text-xs font-medium text-ink-400">
           Length
         </span>
         <div className="flex items-center gap-1">
@@ -69,8 +69,8 @@ export const ToneLengthSelector: React.FC = () => {
                 onClick={() => handleLengthSelect(l.id)}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                   active
-                    ? 'bg-slate-100 text-slate-900'
-                    : 'bg-slate-800 text-slate-300 hover:text-slate-100 hover:bg-slate-700'
+                    ? 'bg-ink-100 text-ink-900'
+                    : 'bg-ink-800 text-ink-300 hover:text-ink-100 hover:bg-ink-700'
                 }`}
               >
                 {l.label}

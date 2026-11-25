@@ -26,11 +26,11 @@ export const Badge: React.FC<BadgeProps> = ({
 
   const variantStyles = {
     warning: 'bg-amber-950/40 text-amber-300 border-amber-500/20',
-    suggestion: 'bg-sky-950/40 text-sky-300 border-sky-500/20',
-    info: 'bg-slate-800 text-slate-300 border-white/10',
+    suggestion: 'bg-accent-950/40 text-accent-300 border-accent-500/20',
+    info: 'bg-ink-800 text-ink-300 border-white/10',
     success: 'bg-emerald-950/40 text-emerald-300 border-emerald-500/20',
-    primary: 'bg-sky-500/10 text-sky-200 border-sky-400/20',
-    neutral: 'bg-slate-800 text-slate-300 border-white/10',
+    primary: 'bg-accent-500/10 text-accent-200 border-accent-400/20',
+    neutral: 'bg-ink-800 text-ink-300 border-white/10',
   };
 
   return (

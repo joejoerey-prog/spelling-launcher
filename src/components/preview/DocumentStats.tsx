@@ -8,14 +8,14 @@ export interface DocumentStatsProps {
 
 const Stat: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div className="px-3 py-2">
-    <div className="text-xs text-slate-500">{label}</div>
-    <div className="font-mono text-sm text-slate-100 tabular-nums">{value}</div>
+    <div className="text-xs text-ink-500">{label}</div>
+    <div className="font-mono text-sm text-ink-100 tabular-nums">{value}</div>
   </div>
 );
 
 export const DocumentStats: React.FC<DocumentStatsProps> = ({ stats, revisionsCount }) => {
   return (
-    <div className="rounded-xl border border-white/10 bg-slate-850 text-xs">
+    <div className="rounded-xl border border-white/10 bg-ink-850 text-xs">
       <div className="grid grid-cols-2">
         <Stat label="Words" value={stats.wordCount} />
         <Stat label="Reading time" value={`${stats.readingTimeMinutes} min`} />
@@ -25,10 +25,10 @@ export const DocumentStats: React.FC<DocumentStatsProps> = ({ stats, revisionsCo
       {stats.readabilityScore !== undefined && (
         <div className="flex items-center justify-between border-t border-white/10 px-3 py-2">
           <div>
-            <div className="text-xs text-slate-500">Readability (Flesch)</div>
-            <div className="text-sm text-slate-100">
+            <div className="text-xs text-ink-500">Readability (Flesch)</div>
+            <div className="text-sm text-ink-100">
               {stats.readabilityLabel}
-              <span className="ml-1.5 font-mono text-xs text-slate-400">grade {stats.readabilityGrade}</span>
+              <span className="ml-1.5 font-mono text-xs text-ink-400">grade {stats.readabilityGrade}</span>
             </div>
           </div>
           <span

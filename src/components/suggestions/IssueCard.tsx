@@ -27,40 +27,40 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
         };
       case 'wordiness':
         return {
-          icon: <Scissors className="w-4 h-4 text-slate-400 shrink-0" />,
-          badgeClass: 'bg-slate-800 text-slate-300 border-white/10',
+          icon: <Scissors className="w-4 h-4 text-ink-400 shrink-0" />,
+          badgeClass: 'bg-ink-800 text-ink-300 border-white/10',
           label: 'Wordiness',
         };
       case 'passive':
         return {
-          icon: <Lightbulb className="w-4 h-4 text-slate-400 shrink-0" />,
-          badgeClass: 'bg-slate-800 text-slate-300 border-white/10',
+          icon: <Lightbulb className="w-4 h-4 text-ink-400 shrink-0" />,
+          badgeClass: 'bg-ink-800 text-ink-300 border-white/10',
           label: 'Passive voice',
         };
       case 'style':
       case 'length':
         return {
-          icon: <Scissors className="w-4 h-4 text-slate-400 shrink-0" />,
-          badgeClass: 'bg-slate-800 text-slate-300 border-white/10',
+          icon: <Scissors className="w-4 h-4 text-ink-400 shrink-0" />,
+          badgeClass: 'bg-ink-800 text-ink-300 border-white/10',
           label: 'Style',
         };
       case 'punctuation':
       case 'typography':
         return {
-          icon: <Type className="w-4 h-4 text-slate-400 shrink-0" />,
-          badgeClass: 'bg-slate-800 text-slate-300 border-white/10',
+          icon: <Type className="w-4 h-4 text-ink-400 shrink-0" />,
+          badgeClass: 'bg-ink-800 text-ink-300 border-white/10',
           label: 'Punctuation',
         };
       case 'repetition':
         return {
-          icon: <AlertTriangle className="w-4 h-4 text-slate-400 shrink-0" />,
-          badgeClass: 'bg-slate-800 text-slate-300 border-white/10',
+          icon: <AlertTriangle className="w-4 h-4 text-ink-400 shrink-0" />,
+          badgeClass: 'bg-ink-800 text-ink-300 border-white/10',
           label: 'Repetition',
         };
       default:
         return {
-          icon: <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />,
-          badgeClass: 'bg-slate-800 text-slate-300 border-white/10',
+          icon: <BookOpen className="w-4 h-4 text-ink-400 shrink-0" />,
+          badgeClass: 'bg-ink-800 text-ink-300 border-white/10',
           label: issue.category,
         };
     }
@@ -86,27 +86,27 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
   };
 
   return (
-    <Card className="border-white/10 bg-slate-850 hover:border-white/20 transition-colors p-3.5 space-y-2.5">
+    <Card className="border-white/10 bg-ink-850 hover:border-white/20 transition-colors p-3.5 space-y-2.5">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           {theme.icon}
-          <span className="font-medium text-xs text-slate-200 truncate">{issue.title}</span>
+          <span className="font-medium text-xs text-ink-200 truncate">{issue.title}</span>
         </div>
         <span className={`text-xs font-medium px-2 py-0.5 rounded-md border shrink-0 ${theme.badgeClass}`}>
           {theme.label}
         </span>
       </div>
 
-      <p className="text-xs text-slate-400 leading-normal">{issue.description}</p>
+      <p className="text-xs text-ink-400 leading-normal">{issue.description}</p>
 
       {issue.suggestions && issue.suggestions.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-          <span className="text-xs text-slate-400 font-medium">Replace with</span>
+          <span className="text-xs text-ink-400 font-medium">Replace with</span>
           {issue.suggestions.map((sug, idx) => (
             <button
               key={idx}
               onClick={() => editorStore.applyIssueFix(issue, sug)}
-              className="text-xs px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-white/10 transition-colors font-medium flex items-center gap-1 cursor-pointer"
+              className="text-xs px-2 py-0.5 rounded-md bg-ink-800 hover:bg-ink-700 text-emerald-300 border border-white/10 transition-colors font-medium flex items-center gap-1 cursor-pointer"
               title={`Replace with "${sug}"`}
             >
               <Check className="w-2.5 h-2.5" />
@@ -118,7 +118,7 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
 
       <div className="flex items-center justify-between gap-2 pt-1">
         {issue.suggestedText ? (
-          <div className="text-xs font-mono text-emerald-300 bg-slate-900 px-2 py-1 rounded-md border border-white/10 truncate flex-1">
+          <div className="text-xs font-mono text-emerald-300 bg-ink-900 px-2 py-1 rounded-md border border-white/10 truncate flex-1">
             {issue.suggestedText}
           </div>
         ) : (
@@ -131,7 +131,7 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
               size="sm"
               onClick={handleLearnWord}
               title="Add this word to your learned words (stored on this Mac only)"
-              className="text-xs px-2 py-1 text-slate-400 hover:text-slate-200"
+              className="text-xs px-2 py-1 text-ink-400 hover:text-ink-200"
             >
               <BookOpen className="w-3 h-3 mr-1" /> Learn
             </Button>
@@ -141,7 +141,7 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
             size="sm"
             onClick={handleIgnore}
             title="Ignore issue (suppresses rule after 3 rejections)"
-            className="text-xs px-2 py-1 text-slate-400 hover:text-slate-200"
+            className="text-xs px-2 py-1 text-ink-400 hover:text-ink-200"
           >
             <EyeOff className="w-3 h-3 mr-1" /> Ignore
           </Button>

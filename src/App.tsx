@@ -92,7 +92,7 @@ export const App: React.FC = () => {
   const state = editorStore.getState;
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-900 text-slate-100 overflow-hidden font-sans">
+    <div className="h-screen w-screen flex flex-col bg-ink-900 text-ink-100 overflow-hidden font-sans">
       {/* Header */}
       <AppHeader
         onOpenSettings={() => setIsSettingsOpen(true)}

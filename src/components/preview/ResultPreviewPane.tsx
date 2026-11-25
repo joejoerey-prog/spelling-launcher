@@ -30,9 +30,9 @@ export const ResultPreviewPane: React.FC<ResultPreviewPaneProps> = ({ onOpenExpo
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Pane Header */}
-      <div className="h-10 border-b border-white/10 bg-slate-900 px-4 flex items-center justify-between text-xs font-medium text-slate-300 select-none shrink-0">
+      <div className="h-10 border-b border-white/10 bg-ink-900 px-4 flex items-center justify-between text-xs font-medium text-ink-300 select-none shrink-0">
         <div className="flex items-center gap-2">
-          <Eye className="w-4 h-4 text-slate-500" />
+          <Eye className="w-4 h-4 text-ink-500" />
           <span>Result</span>
         </div>
 
@@ -41,8 +41,8 @@ export const ResultPreviewPane: React.FC<ResultPreviewPaneProps> = ({ onOpenExpo
             onClick={() => setShowSessionDiffs(!showSessionDiffs)}
             className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors ${
               showSessionDiffs
-                ? 'bg-slate-800 text-slate-100 border border-white/10'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                ? 'bg-ink-800 text-ink-100 border border-white/10'
+                : 'text-ink-400 hover:text-ink-200 hover:bg-ink-800'
             }`}
             title="Toggle changes view"
           >
@@ -60,11 +60,11 @@ export const ResultPreviewPane: React.FC<ResultPreviewPaneProps> = ({ onOpenExpo
         {/* Content Viewer / Session Diffs */}
         {showSessionDiffs ? (
           <div className="space-y-3">
-            <div className="text-xs font-medium text-slate-400">
+            <div className="text-xs font-medium text-ink-400">
               Changes this session ({sessionDiffEntries.length})
             </div>
             {sessionDiffEntries.length === 0 ? (
-              <div className="p-4 text-center rounded-xl bg-slate-850 border border-white/10 text-xs text-slate-500">
+              <div className="p-4 text-center rounded-xl bg-ink-850 border border-white/10 text-xs text-ink-500">
                 No revisions accepted yet.
               </div>
             ) : (
@@ -76,14 +76,14 @@ export const ResultPreviewPane: React.FC<ResultPreviewPaneProps> = ({ onOpenExpo
             )}
           </div>
         ) : (
-          <div className="p-4 bg-slate-850 rounded-xl border border-white/10 font-serif text-[15px] text-slate-200 leading-7 space-y-3">
+          <div className="p-4 bg-ink-850 rounded-xl border border-white/10 font-serif text-[15px] text-ink-200 leading-7 space-y-3">
             {state.document.paragraphs.map((p) => {
               if (p.isBlank) return <div key={p.id} className="h-3" />;
               if (p.isCodeBlock) {
                 return (
                   <pre
                     key={p.id}
-                    className="p-3 bg-slate-950 rounded-lg text-xs font-mono text-slate-300 overflow-x-auto border border-white/10"
+                    className="p-3 bg-ink-950 rounded-lg text-xs font-mono text-ink-300 overflow-x-auto border border-white/10"
                   >
                     {p.rawText}
                   </pre>
@@ -99,7 +99,7 @@ export const ResultPreviewPane: React.FC<ResultPreviewPaneProps> = ({ onOpenExpo
                         className={diffEntry ? 'text-emerald-200 underline decoration-emerald-500/50 underline-offset-4' : ''}
                       >
                         {idx === 0 && s.prefix ? (
-                          <strong className="text-slate-100 font-medium">{s.prefix}</strong>
+                          <strong className="text-ink-100 font-medium">{s.prefix}</strong>
                         ) : null}
                         {idx > 0 ? ' ' : ''}
                         {s.trimmedText}
@@ -114,7 +114,7 @@ export const ResultPreviewPane: React.FC<ResultPreviewPaneProps> = ({ onOpenExpo
       </div>
 
       {/* Export & Copy Footer */}
-      <div className="p-3 border-t border-white/10 bg-slate-900 flex items-center justify-between gap-2 shrink-0">
+      <div className="p-3 border-t border-white/10 bg-ink-900 flex items-center justify-between gap-2 shrink-0">
         <Button
           variant="secondary"
           size="sm"

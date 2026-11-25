@@ -11,7 +11,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ originalText, modifiedTe
 
   return (
     <div className="font-serif text-[15px] leading-7 space-y-1">
-      <div className="p-4 rounded-xl bg-slate-850 border border-white/10">
+      <div className="p-4 rounded-xl bg-ink-850 border border-white/10">
         {diffResult.changes.map((c, i) => {
           if (c.op === 'insert') {
             return (
@@ -33,7 +33,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ originalText, modifiedTe
               </span>
             );
           }
-          return <span key={i} className="text-slate-300">{c.value}</span>;
+          return <span key={i} className="text-ink-300">{c.value}</span>;
         })}
       </div>
     </div>

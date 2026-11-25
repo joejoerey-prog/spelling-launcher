@@ -34,17 +34,17 @@ export const RewriteCard: React.FC<RewriteCardProps> = ({ option }) => {
   return (
     <Card
       hoverable
-      className="border-white/10 bg-slate-850 hover:border-white/20 hover:bg-slate-800 transition-colors p-3.5 space-y-2.5 group"
+      className="border-white/10 bg-ink-850 hover:border-white/20 hover:bg-ink-800 transition-colors p-3.5 space-y-2.5 group"
     >
       {/* Card Header: Label & Badges */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           {option.isAiGenerated ? (
-            <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+            <Sparkles className="w-3.5 h-3.5 text-ink-400" />
           ) : (
-            <Wand2 className="w-3.5 h-3.5 text-slate-400" />
+            <Wand2 className="w-3.5 h-3.5 text-ink-400" />
           )}
-          <span className="font-medium text-xs text-slate-200 transition-colors">
+          <span className="font-medium text-xs text-ink-200 transition-colors">
             {option.label}
           </span>
         </div>
@@ -64,7 +64,7 @@ export const RewriteCard: React.FC<RewriteCardProps> = ({ option }) => {
       </div>
 
       {/* Side-by-side Inline Diff Render */}
-      <div className="text-[15px] leading-7 text-slate-200 font-serif p-3 rounded-lg bg-slate-900 border border-white/10">
+      <div className="text-[15px] leading-7 text-ink-200 font-serif p-3 rounded-lg bg-ink-900 border border-white/10">
         {option.diff.map((change, idx) => {
           if (change.op === 'insert') {
             return (
@@ -92,7 +92,7 @@ export const RewriteCard: React.FC<RewriteCardProps> = ({ option }) => {
 
       {/* Description & Action Bar */}
       <div className="flex items-center justify-between gap-2 pt-1">
-        <p className="text-xs text-slate-500 truncate max-w-[12rem]">
+        <p className="text-xs text-ink-500 truncate max-w-[12rem]">
           {option.description}
         </p>
 
