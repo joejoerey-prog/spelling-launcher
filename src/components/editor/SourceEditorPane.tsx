@@ -255,6 +255,7 @@ export const SourceEditorPane: React.FC = () => {
             onChange={handleRawChange}
             className="w-full h-full min-h-[400px] bg-transparent text-ink-100 font-mono text-sm leading-relaxed outline-none resize-none"
             placeholder="Type or paste text"
+            data-sl-editor
             autoFocus
           />
         ) : (
@@ -278,6 +279,7 @@ export const SourceEditorPane: React.FC = () => {
               <div key={para.id} className="paragraph-block flex flex-wrap items-baseline gap-x-1 gap-y-1 my-1">
                 {para.sentences.map((sentence) => {
                   const isSelected = state.selectedSentenceId === sentence.id;
+                  const docStart = editorStore.sentenceRange(sentence)?.start;
                   const issues = state.allDocumentIssues.get(sentence.id) || [];
                   const hasIssues = issues.length > 0;
 
@@ -316,7 +318,8 @@ export const SourceEditorPane: React.FC = () => {
                       role="button"
                       tabIndex={0}
                       aria-pressed={isSelected}
-                      onClick={() => handleSentenceClick(sentence)}
+                      // A drag that highlights text ends in a click; that is not a request to select the sentence.
+                      onClick={() => !window.getSelection()?.toString() && handleSentenceClick(sentence)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
@@ -329,15 +332,18 @@ export const SourceEditorPane: React.FC = () => {
                       {hasIssues && !isSelected && (
                         <span aria-hidden className={`mr-0.5 ${dotColor}`}>‸</span>
                       )}
-                      {highlightSegments(sentence.trimmedText, issues).map((seg, idx) =>
-                        seg.category ? (
-                          <span key={idx} className={UNDERLINE_BY_CATEGORY(seg.category)}>
-                            {seg.text}
-                          </span>
-                        ) : (
-                          <React.Fragment key={idx}>{seg.text}</React.Fragment>
-                        )
-                      )}
+                      {/* Only this span holds document text; selectionRange.ts measures highlights against it. */}
+                      <span data-sl-text={docStart === undefined ? undefined : ''} data-doc-start={docStart}>
+                        {highlightSegments(sentence.trimmedText, issues).map((seg, idx) =>
+                          seg.category ? (
+                            <span key={idx} className={UNDERLINE_BY_CATEGORY(seg.category)}>
+                              {seg.text}
+                            </span>
+                          ) : (
+                            <React.Fragment key={idx}>{seg.text}</React.Fragment>
+                          )
+                        )}
+                      </span>
                     </span>
                   );
                 })}

@@ -134,7 +134,7 @@ class EditorStore {
   }
 
   /** Document range (UTF-16 offsets into rawContent) of the sentence's trimmed text. */
-  private sentenceRange(s: SentenceNode): { start: number; end: number } | null {
+  sentenceRange(s: SentenceNode): { start: number; end: number } | null {
     if (s.documentStartOffset === undefined) return null;
     const start = s.documentStartOffset + (s.text.length - s.text.trimStart().length);
     return { start, end: start + s.trimmedText.length };
