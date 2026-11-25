@@ -2,6 +2,8 @@ import { DocumentModel, DocumentStats, SentenceNode, ParagraphNode } from '../..
 import { DeterministicIssue, IssueCategory, RewriteOption, RewriteTone, RewriteLength, RewriteGoal } from '../../types/suggestions';
 import { parseDocument, calculateDocumentStats } from '../engine/segmenter';
 import { rewriteSelectedPassage } from '../engine/aiRewriter';
+import { Edit, Piece, SelectionOption, buildOptions, composePieces, finishCandidate, resolveSelection } from '../engine/selectionEdit';
+import { selectionCandidates } from '../engine/selectionProvider';
 import { rulesStore } from './rulesStore';
 import { settingsStore } from './settingsStore';
 import { styleStore } from './styleStore';
@@ -17,6 +19,25 @@ export interface HistoryEntry {
   timestamp: Date;
 }
 
+/** A Suggest or Polish request on highlighted text, held until it is accepted, dismissed or out of date. */
+export interface SelectionEditSession {
+  id: number;
+  kind: 'suggest' | 'polish';
+  /** Range of the highlighted text in rawContent, without edge whitespace. */
+  start: number;
+  end: number;
+  text: string;
+  /** Document text when the text was highlighted; accepting is refused if it has changed since. */
+  snapshot: string;
+  status: 'loading' | 'ready';
+  /** Suggest: ranked replacements. */
+  options: SelectionOption[];
+  /** Polish: the edit as separate changes; empty when the text needs none. */
+  pieces: Piece[];
+  isAi: boolean;
+  notice?: string;
+}
+
 export interface EditorState {
   document: DocumentModel;
   stats: DocumentStats;
@@ -24,6 +45,7 @@ export interface EditorState {
   activeSentenceIssues: DeterministicIssue[];
   allDocumentIssues: Map<string, DeterministicIssue[]>;
   rewriteOptions: RewriteOption[];
+  selectionEdit: SelectionEditSession | null;
   isLoadingRewrites: boolean;
   selectedTone: RewriteTone;
   selectedLength: RewriteLength;
@@ -63,6 +85,7 @@ class EditorStore {
       activeSentenceIssues: [],
       allDocumentIssues: new Map(),
       rewriteOptions: [],
+      selectionEdit: null,
       isLoadingRewrites: false,
       selectedTone: 'natural',
       selectedLength: 'same',
@@ -303,6 +326,7 @@ class EditorStore {
     this.state.selectedSentenceId = null;
     this.state.activeSentenceIssues = [];
     this.state.rewriteOptions = [];
+    this.state.selectionEdit = null;
     this.state.error = null;
     this.state.errorSource = null;
     this.state.successMessage = `Loaded ${fileName}`;
@@ -416,6 +440,137 @@ class EditorStore {
     this.notify();
   }
 
+  private selectionEditId = 0;
+
+  /** Native-checker fixes that sit entirely inside the range, with offsets relative to its start. */
+  private issueEditsWithin(start: number, end: number): Edit[] {
+    const edits: Edit[] = [];
+    for (const issues of this.state.allDocumentIssues.values()) {
+      for (const i of issues) {
+        if (i.replacement === undefined || !this.issueIsCurrent(i)) continue;
+        if (i.rawStartOffset! >= start && i.rawEndOffset! <= end) {
+          edits.push({ start: i.rawStartOffset! - start, end: i.rawEndOffset! - start, text: i.replacement });
+        }
+      }
+    }
+    return edits;
+  }
+
+  /**
+   * Suggest (ranked replacements) or Polish (one conservative edit) for highlighted text.
+   * `range` is the highlight as offsets into rawContent. Nothing is edited until the user accepts.
+   */
+  async startSelectionEdit(kind: 'suggest' | 'polish', range: { start: number; end: number } | null): Promise<void> {
+    const raw = this.state.document.rawContent;
+    const sel = resolveSelection(raw, range?.start ?? 0, range?.end ?? 0);
+    if (!sel.ok) {
+      this.showError(sel.message);
+      return;
+    }
+
+    const id = ++this.selectionEditId;
+    this.state.selectionEdit = {
+      id, kind, start: sel.start, end: sel.end, text: sel.text, snapshot: raw,
+      status: 'loading', options: [], pieces: [], isAi: false,
+    };
+    this.notify();
+
+    const settings = settingsStore.state;
+    const dialect = settings.language === 'en_US' ? 'en_US' : 'en_GB';
+    const haystack = `${sel.text} ${sel.paragraph}`.toLowerCase();
+    const terms = [...styleStore.state.learnedWords, ...rulesStore.state.ignoredTerms]
+      .filter((t) => t.trim() && haystack.includes(t.trim().toLowerCase()))
+      .slice(0, 50);
+
+    try {
+      const result = await selectionCandidates(
+        {
+          kind,
+          text: sel.text,
+          paragraph: sel.paragraph,
+          tone: kind === 'suggest' ? this.state.selectedTone : 'natural',
+          length: kind === 'suggest' ? this.state.selectedLength : 'same',
+          goal: kind === 'suggest' ? this.state.selectedGoal : 'clarity',
+          dialect,
+          terms,
+          issueEdits: kind === 'polish' ? this.issueEditsWithin(sel.start, sel.end) : [],
+        },
+        settings
+      );
+
+      const current = this.state.selectionEdit;
+      if (!current || current.id !== id) return; // dismissed or replaced while waiting
+      if (this.state.document.rawContent !== current.snapshot) {
+        this.state.selectionEdit = null;
+        this.staleEditNotice();
+        return;
+      }
+      const first = result.candidates[0];
+      this.state.selectionEdit = {
+        ...current,
+        status: 'ready',
+        isAi: result.isAi,
+        notice: result.notice,
+        options: kind === 'suggest' ? buildOptions(sel.text, result.candidates, { dialect, terms, isAi: result.isAi }) : [],
+        pieces: kind === 'polish' && first ? finishCandidate(sel.text, first.text, dialect, terms) ?? [] : [],
+      };
+      this.notify();
+    } catch (err: any) {
+      if (this.state.selectionEdit?.id === id) this.state.selectionEdit = null;
+      this.showError(`Could not check the highlighted text: ${err?.message || err}`);
+    }
+  }
+
+  dismissSelectionEdit(): void {
+    this.selectionEditId++;
+    this.state.selectionEdit = null;
+    this.notify();
+  }
+
+  /** The open session, or null after refusing because the document changed since the text was highlighted. */
+  private currentSelectionEdit(): SelectionEditSession | null {
+    const s = this.state.selectionEdit;
+    if (!s) return null;
+    if (this.state.document.rawContent !== s.snapshot) {
+      this.state.selectionEdit = null;
+      this.staleEditNotice();
+      return null;
+    }
+    return s;
+  }
+
+  private commitSelectionText(s: SelectionEditSession, text: string, description: string): void {
+    for (const p of this.state.document.paragraphs) {
+      for (const sentence of p.sentences) {
+        const r = this.sentenceRange(sentence);
+        if (r && s.start >= r.start && s.end <= r.end) {
+          const t = sentence.trimmedText;
+          this.recordDiff(sentence.id, t, t.slice(0, s.start - r.start) + text + t.slice(s.end - r.start));
+        }
+      }
+    }
+    void this.commitEdits([{ start: s.start, end: s.end, text }], description);
+  }
+
+  acceptSelectionOption(optionId: string): void {
+    const s = this.currentSelectionEdit();
+    const option = s?.options.find((o) => o.id === optionId);
+    if (s && option) this.commitSelectionText(s, option.rewrittenText, `Accepted: ${option.label}`);
+  }
+
+  /** Applies the chosen Polish changes (by id) in one edit, so one undo reverts them all. */
+  applyPolish(acceptedIds: number[]): void {
+    const s = this.currentSelectionEdit();
+    if (!s) return;
+    const text = composePieces(s.pieces, new Set(acceptedIds));
+    if (text === s.text) {
+      this.dismissSelectionEdit();
+      return;
+    }
+    const total = s.pieces.filter((p) => p.kind === 'change').length;
+    this.commitSelectionText(s, text, `Polished selection (${acceptedIds.length} of ${total} changes)`);
+  }
+
   /**
    * The single edit primitive: splices rawContent at document offsets, re-parses, recomputes stats,
    * marks dirty, pushes one history entry and re-checks.
@@ -432,6 +587,7 @@ class EditorStore {
     this.setContent(content);
     // Rewrites were built from the old text; showing them after the edit would offer a stale diff.
     this.state.rewriteOptions = [];
+    this.state.selectionEdit = null;
     this.state.successMessage = message;
     this.pushHistory(content, description);
     await this.refreshAllIssues();
@@ -577,6 +733,7 @@ class EditorStore {
       if (this.findSentence(id)?.trimmedText !== d.current) this.state.sessionDiffs.delete(id);
     }
     this.state.rewriteOptions = [];
+    this.state.selectionEdit = null;
     if (this.state.selectedSentenceId && !this.getSelectedSentence()) {
       this.state.selectedSentenceId = null;
       this.state.activeSentenceIssues = [];
