@@ -332,8 +332,9 @@ export const SourceEditorPane: React.FC = () => {
                       {hasIssues && !isSelected && (
                         <span aria-hidden className={`mr-0.5 ${dotColor}`}>‸</span>
                       )}
-                      {/* Only this span holds document text; selectionRange.ts measures highlights against it. */}
-                      <span data-sl-text={docStart === undefined ? undefined : ''} data-doc-start={docStart}>
+                      {/* Only this span holds document text; selectionRange.ts measures highlights against it.
+                          The page is select-none, so the text opts back in to be highlighted. */}
+                      <span className="select-text" data-sl-text={docStart === undefined ? undefined : ''} data-doc-start={docStart}>
                         {highlightSegments(sentence.trimmedText, issues).map((seg, idx) =>
                           seg.category ? (
                             <span key={idx} className={UNDERLINE_BY_CATEGORY(seg.category)}>

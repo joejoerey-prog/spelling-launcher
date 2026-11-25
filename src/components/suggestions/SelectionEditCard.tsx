@@ -146,8 +146,8 @@ export const SelectionEditCard: React.FC<SelectionEditCardProps> = ({ session, s
               )}
             </div>
             <p className="text-xs text-ink-500">Select a change to keep the original wording for it.</p>
-            <div className="flex items-center justify-end gap-1.5">
-              <Button variant="ghost" size="sm" onClick={() => editorStore.dismissSelectionEdit()} className="text-xs">
+            <div className="flex flex-wrap items-center justify-end gap-1.5">
+              <Button variant="ghost" size="sm" onClick={() => editorStore.dismissSelectionEdit()} className="text-xs whitespace-nowrap">
                 Keep original
               </Button>
               <Button
@@ -155,7 +155,7 @@ export const SelectionEditCard: React.FC<SelectionEditCardProps> = ({ session, s
                 size="sm"
                 disabled={stale || acceptedIds.length === 0}
                 onClick={() => editorStore.applyPolish(acceptedIds)}
-                className="text-xs px-3 font-medium"
+                className="text-xs px-3 font-medium whitespace-nowrap"
               >
                 <Check className="w-3.5 h-3.5 mr-1" /> Apply {acceptedIds.length} of {changeIds.length} {changeIds.length === 1 ? 'change' : 'changes'}
               </Button>

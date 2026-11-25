@@ -91,6 +91,13 @@ describe('mapping a highlight to document offsets', () => {
     expect(RAW.slice(r.start, r.end)).toBe('recieved alot of feedback. It was');
   });
 
+  it('marks sentence text as selectable, because the page itself is select-none', async () => {
+    await open(RAW);
+    const roots = Array.from(document.querySelectorAll('[data-sl-text]'));
+    expect(roots.length).toBeGreaterThan(0);
+    expect(roots.every((el) => el.classList.contains('select-text'))).toBe(true);
+  });
+
   it('is null when nothing is highlighted', async () => {
     await open(RAW);
     expect(readDocumentSelection()).toBeNull();
